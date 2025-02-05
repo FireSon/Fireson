@@ -113,7 +113,7 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add reconfigure step to allow to reconfigure a config entry."""
-        # This methid displays a reconfigure option in the integration and is
+        # This method displays a reconfigure option in the integration and is
         # different to options.
         # It can be used to reconfigure any of the data submitted when first installed.
         # This is optional and can be removed if you do not want to allow reconfiguration.
