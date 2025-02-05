@@ -16,6 +16,7 @@ class DeviceType(StrEnum):
     """ZendureDevice types."""
 
     HYPER2000 = "hyper_2000"
+    DOOR_SENSOR = "door"
     OTHER = "other"
 
 
