@@ -74,8 +74,8 @@ class ZendureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         # If your device connects via another device, add via_device parameter with the indentifiers of that device.
         return DeviceInfo(
             name=f"ExampleDevice{self.device.device_id}",
-            manufacturer="ACME Manufacturer",
-            model="Door&Temp v1",
+            manufacturer="Zendure",
+            model="Hyper 2000",
             sw_version="1.0",
             identifiers={
                 (

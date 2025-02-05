@@ -29,7 +29,7 @@ class ZendureAPIData:
 
 
 class ZendureCoordinator(DataUpdateCoordinator):
-    """My example coordinator."""
+    """Zendure coordinator."""
 
     data: ZendureAPIData
 

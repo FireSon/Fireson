@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 # TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, description={"suggested_value": "10.10.10.1"}): str,
+        vol.Required(CONF_HOST, description={"suggested_value": "192.168.2.1"}): str,
         vol.Required(CONF_USERNAME, description={"suggested_value": "test"}): str,
         vol.Required(CONF_PASSWORD, description={"suggested_value": "1234"}): str,
     }
@@ -59,11 +59,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth from err
     except APIConnectionError as err:
         raise CannotConnect from err
-    return {"title": f"Example Integration - {data[CONF_HOST]}"}
+    return {"title": f"Zendure Integration - {data[CONF_HOST]}"}
 
 
-class ExampleConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Example Integration."""
+class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Zendure Integration."""
 
     VERSION = 1
     _input_data: dict[str, Any]
@@ -72,9 +72,9 @@ class ExampleConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        # Remove this method and the ExampleOptionsFlowHandler class
+        # Remove this method and the ZendureOptionsFlowHandler class
         # if you do not want any options for your integration.
-        return ExampleOptionsFlowHandler(config_entry)
+        return ZendureOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -154,7 +154,7 @@ class ExampleConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ExampleOptionsFlowHandler(OptionsFlow):
+class ZendureOptionsFlowHandler(OptionsFlow):
     """Handles the options flow."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:

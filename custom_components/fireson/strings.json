@@ -34,7 +34,7 @@
           "scan_interval": "Scan Interval (seconds)"
         },
         "description": "Amend your options.",
-        "title": "Example Integration Options"
+        "title": "Zendure Integration Options"
       }
     }
   }

@@ -13,18 +13,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class DeviceType(StrEnum):
-    """Device types."""
+    """ZendureDevice types."""
 
-    TEMP_SENSOR = "temp_sensor"
-    DOOR_SENSOR = "door_sensor"
+    HYPER2000 = "hyper_2000"
     OTHER = "other"
 
 
 DEVICES = [
-    {"id": 1, "type": DeviceType.TEMP_SENSOR},
-    {"id": 2, "type": DeviceType.TEMP_SENSOR},
-    {"id": 3, "type": DeviceType.TEMP_SENSOR},
-    {"id": 4, "type": DeviceType.TEMP_SENSOR},
+    {"id": 1, "type": DeviceType.HYPER2000},
+    {"id": 2, "type": DeviceType.HYPER2000},
+    {"id": 3, "type": DeviceType.HYPER2000},
+    {"id": 4, "type": DeviceType.HYPER2000},
     {"id": 1, "type": DeviceType.DOOR_SENSOR},
     {"id": 2, "type": DeviceType.DOOR_SENSOR},
     {"id": 3, "type": DeviceType.DOOR_SENSOR},
@@ -33,7 +32,7 @@ DEVICES = [
 
 
 @dataclass
-class Device:
+class ZendureDevice:
     """API device."""
 
     device_id: int
@@ -44,7 +43,7 @@ class Device:
 
 
 class API:
-    """Class for example API."""
+    """Class for Zendure API."""
 
     def __init__(self, host: str, user: str, pwd: str) -> None:
         """Initialise."""
@@ -70,10 +69,10 @@ class API:
         self.connected = False
         return True
 
-    def get_devices(self) -> list[Device]:
+    def get_devices(self) -> list[ZendureDevice]:
         """Get devices on api."""
         return [
-            Device(
+            ZendureDevice(
                 device_id=device.get("id"),
                 device_unique_id=self.get_device_unique_id(
                     device.get("id"), device.get("type")
@@ -89,7 +88,7 @@ class API:
         """Return a unique device id."""
         if device_type == DeviceType.DOOR_SENSOR:
             return f"{self.controller_name}_D{device_id}"
-        if device_type == DeviceType.TEMP_SENSOR:
+        if device_type == DeviceType.HYPER2000:
             return f"{self.controller_name}_T{device_id}"
         return f"{self.controller_name}_Z{device_id}"
 
@@ -97,7 +96,7 @@ class API:
         """Return the device name."""
         if device_type == DeviceType.DOOR_SENSOR:
             return f"DoorSensor{device_id}"
-        if device_type == DeviceType.TEMP_SENSOR:
+        if device_type == DeviceType.HYPER2000:
             return f"TempSensor{device_id}"
         return f"OtherSensor{device_id}"
 
@@ -105,7 +104,7 @@ class API:
         """Get device random value."""
         if device_type == DeviceType.DOOR_SENSOR:
             return choice([True, False])
-        if device_type == DeviceType.TEMP_SENSOR:
+        if device_type == DeviceType.HYPER2000:
             return randrange(15, 28)
         return randrange(1, 10)
 
