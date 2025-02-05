@@ -1,0 +1,41 @@
+{
+  "config": {
+    "title": "Zendure Integration",
+    "abort": {
+      "already_configured": "Device is already configured",
+      "reconfigure_successful": "Reconfiguration successful"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "password": "Password",
+          "username": "Username"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "Host",
+          "password": "Password",
+          "username": "Username"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        },
+        "description": "Amend your options.",
+        "title": "Example Integration Options"
+      }
+    }
+  }
+}
