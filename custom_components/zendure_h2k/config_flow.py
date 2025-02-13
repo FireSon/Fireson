@@ -74,9 +74,6 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         # Called when you initiate adding an integration via the UI
         errors: dict[str, str] = {}
-        config_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
 
         if user_input is not None:
             # The form has been filled in and submitted, so process the data provided.
@@ -106,7 +103,7 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST, description={"suggested_value": "192.168.10.1"}): str,
                     vol.Required(
                         CONF_SCAN_INTERVAL,
-                        default=config_entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                        default=60,
                     ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))),
                     vol.Required(CONF_USERNAME, description={"suggested_value": "test"}): str,
                     vol.Required(CONF_PASSWORD, description={"suggested_value": "12341"}): selector.TextSelector(
