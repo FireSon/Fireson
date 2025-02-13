@@ -10,6 +10,6 @@
   "requirements": [],
   "single_config_entry": false,
   "ssdp": [],
-  "version": "1.0.3",
+  "version": "1.0.4",
   "zeroconf": []
 }

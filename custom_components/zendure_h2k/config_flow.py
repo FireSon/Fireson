@@ -107,9 +107,6 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
                             type=selector.TextSelectorType.PASSWORD,
                         ),
                     ),
-                    vol.Required(CONF_SCAN_INTERVAL,
-                        default=self.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-                    ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))),
                 }
             ), errors=errors
         )
