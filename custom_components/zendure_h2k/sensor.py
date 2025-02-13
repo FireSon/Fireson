@@ -1,11 +1,13 @@
-"""Interfaces with the Zendure api sensors."""
+"""Interfaces with the Zendure sensors."""
 
 import logging
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,24 +26,13 @@ async def async_setup_entry(
     config_entry: MyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    """Set up the Binary Sensors."""
-    # This gets the data update coordinator from the config entry runtime data as specified in your __init__.py
+    """Register the AddEntitiesCallback."""
+
     coordinator: ZendureCoordinator = config_entry.runtime_data.coordinator
-
-    # Enumerate all the binary sensors in your data value from your DataUpdateCoordinator and add an instance of your binary sensor class
-    # to a list for each one.
-    # This maybe different in your specific case, depending on how your data is structured
-    binary_sensors = [
-        ZendureBinarySensor(coordinator, device)
-        for device in coordinator.data.devices
-        if device.device_type == DeviceType.DOOR_SENSOR
-    ]
-
-    # Create the binary sensors.
-    async_add_entities(binary_sensors)
+    setattr(coordinator, 'async_add_entities', async_add_entities)
 
 
-class ZendureBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class ZendureSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a sensor."""
 
     def __init__(self, coordinator: ZendureCoordinator, device: Device) -> None:
@@ -63,8 +54,8 @@ class ZendureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_class(self) -> str:
         """Return device class."""
-        # https://developers.home-assistant.io/docs/core/entity/binary-sensor#available-device-classes
-        return BinarySensorDeviceClass.DOOR
+        # https://developers.home-assistant.io/docs/core/entity/sensor/#available-device-classes
+        return SensorDeviceClass.TEMPERATURE
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -73,9 +64,9 @@ class ZendureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         # If your device is created elsewhere, you can just specify the indentifiers parameter.
         # If your device connects via another device, add via_device parameter with the indentifiers of that device.
         return DeviceInfo(
-            name=f"ExampleDevice{self.device.device_id}",
-            manufacturer="Zendure",
-            model="Hyper 2000",
+            name=f"ZendureDevice{self.device.device_id}",
+            manufacturer="ACME Manufacturer",
+            model="Door&Temp v1",
             sw_version="1.0",
             identifiers={
                 (
@@ -91,10 +82,22 @@ class ZendureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self.device.name
 
     @property
-    def is_on(self) -> bool | None:
-        """Return if the binary sensor is on."""
-        # This needs to enumerate to true or false
-        return self.device.state
+    def native_value(self) -> int | float:
+        """Return the state of the entity."""
+        # Using native value and native unit of measurement, allows you to change units
+        # in Lovelace and HA will automatically calculate the correct value.
+        return float(self.device.state)
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return unit of temperature."""
+        return UnitOfTemperature.CELSIUS
+
+    @property
+    def state_class(self) -> str | None:
+        """Return state class."""
+        # https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes
+        return SensorStateClass.MEASUREMENT
 
     @property
     def unique_id(self) -> str:

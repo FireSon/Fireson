@@ -1,4 +1,4 @@
-"""Zendure integration using DataUpdateCoordinator."""
+"""Integration Zendure using DataUpdateCoordinator."""
 
 from dataclasses import dataclass
 from datetime import timedelta
@@ -8,14 +8,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import DOMAIN, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import API, APIAuthError, Device, DeviceType
-from .const import DEFAULT_SCAN_INTERVAL
+from .binary_sensor import ZendureBinarySensor
+from .sensor import ZendureSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
     """Zendure coordinator."""
 
     data: ZendureAPIData
+    async_add_entities: AddEntitiesCallback
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
@@ -41,21 +43,13 @@ class ZendureCoordinator(DataUpdateCoordinator):
         self.user = config_entry.data[CONF_USERNAME]
         self.pwd = config_entry.data[CONF_PASSWORD]
 
-        # set variables from options.  You need a default here incase options have not been set
-        self.poll_interval = config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-
         # Initialise DataUpdateCoordinator
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN} ({config_entry.unique_id})",
-            # Method to call on every update interval.
             update_method=self.async_update_data,
-            # Polling interval. Will only be polled if there are subscribers.
-            # Using config option here but you can just use a value.
-            update_interval=timedelta(seconds=self.poll_interval),
+            update_interval=timedelta(hours=1),
         )
 
         # Initialise your api here
@@ -71,6 +65,26 @@ class ZendureCoordinator(DataUpdateCoordinator):
             if not self.api.connected:
                 await self.hass.async_add_executor_job(self.api.connect)
             devices = await self.hass.async_add_executor_job(self.api.get_devices)
+
+            binary_sensors = [
+                ZendureBinarySensor(self, device)
+                for device in devices
+                if device.device_type == DeviceType.DOOR_SENSOR
+            ]
+
+            # Create the binary sensors.
+            self.async_add_entities(binary_sensors)
+
+            sensors = [
+                ZendureSensor(self, device)
+                for device in devices
+                if device.device_type == DeviceType.TEMP_SENSOR
+            ]
+
+            # Create the sensors.
+            self.async_add_entities(sensors)
+
+
         except APIAuthError as err:
             _LOGGER.error(err)
             raise UpdateFailed(err) from err

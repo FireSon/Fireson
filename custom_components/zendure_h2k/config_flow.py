@@ -16,21 +16,20 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .api import API, APIAuthError, APIConnectionError
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, description={"suggested_value": "192.168.2.1"}): str,
+        vol.Required(CONF_HOST, description={"suggested_value": "10.10.10.1"}): str,
         vol.Required(CONF_USERNAME, description={"suggested_value": "test"}): str,
         vol.Required(CONF_PASSWORD, description={"suggested_value": "1234"}): str,
     }
@@ -113,7 +112,7 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Add reconfigure step to allow to reconfigure a config entry."""
-        # This method displays a reconfigure option in the integration and is
+        # This methid displays a reconfigure option in the integration and is
         # different to options.
         # It can be used to reconfigure any of the data submitted when first installed.
         # This is optional and can be removed if you do not want to allow reconfiguration.
@@ -175,8 +174,8 @@ class ZendureOptionsFlowHandler(OptionsFlow):
             {
                 vol.Required(
                     CONF_SCAN_INTERVAL,
-                    default=self.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-                ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))),
+                    default=self.options.get(CONF_SCAN_INTERVAL, 60),
+                ): (vol.All(vol.Coerce(int), vol.Clamp(min=10))),
             }
         )
 

@@ -1,17 +1,17 @@
 {
-  "domain": "fireson",
-  "name": "Zendure Integration",
+  "domain": "zendure_h2k",
+  "name": "Zendure Hyper2000 Integration",
   "codeowners": [
     "@fireson"
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/FireSon/Fireson",
+  "documentation": "https://github.com/fireson/Hyper2000",
   "homekit": {},
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "requirements": [],
   "single_config_entry": false,
   "ssdp": [],
-  "version": "1.0.2",
+  "version": "1.0.1",
   "zeroconf": []
 }
