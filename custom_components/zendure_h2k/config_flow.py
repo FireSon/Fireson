@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
