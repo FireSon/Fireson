@@ -27,15 +27,6 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST, description={"suggested_value": "10.10.10.1"}): str,
-        vol.Required(CONF_USERNAME, description={"suggested_value": "test"}): str,
-        vol.Required(CONF_PASSWORD, description={"suggested_value": "1234"}): str,
-    }
-)
-
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
@@ -106,7 +97,13 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Show initial form.
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema = vol.Schema(
+                {
+                    vol.Required(CONF_HOST, description={"suggested_value": "10.10.10.1"}): str,
+                    vol.Required(CONF_USERNAME, description={"suggested_value": "test"}): str,
+                    vol.Required(CONF_PASSWORD, description={"suggested_value": "1234"}): str,
+                }
+            ), errors=errors
         )
 
     async def async_step_reconfigure(
