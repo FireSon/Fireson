@@ -1,4 +1,4 @@
-"""The Integration 101 Template integration."""
+"""The Zendure Integration integration."""
 
 from __future__ import annotations
 

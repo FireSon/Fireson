@@ -1,4 +1,4 @@
-# Integration 101 Template
+# Zendure Integration
 
 So this is your starting point into writing your first Home Assistant integration (or maybe just advancing your knowledge and improving something you have already written).
 

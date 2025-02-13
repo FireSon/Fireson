@@ -1,4 +1,4 @@
-"""Constants for the Integration 101 Template integration."""
+"""Constants for the Zendure Integration integration."""
 
 DOMAIN = "hyper_h2k"
 

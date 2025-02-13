@@ -1,4 +1,4 @@
-"""Integration 101 Template integration using DataUpdateCoordinator."""
+"""Zendure Integration integration using DataUpdateCoordinator."""
 
 from dataclasses import dataclass
 from datetime import timedelta

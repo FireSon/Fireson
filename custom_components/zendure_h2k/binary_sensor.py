@@ -1,4 +1,4 @@
-"""Interfaces with the Integration 101 Template api sensors."""
+"""Interfaces with the Zendure Integration api sensors."""
 
 import logging
 
@@ -74,7 +74,7 @@ class ZendureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         # If your device connects via another device, add via_device parameter with the indentifiers of that device.
         return DeviceInfo(
             name=f"ZendureDevice{self.device.device_id}",
-            manufacturer="ACME Manufacturer",
+            manufacturer="Zendure",
             model="Door&Temp v1",
             sw_version="1.0",
             identifiers={
