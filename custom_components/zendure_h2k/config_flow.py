@@ -101,6 +101,10 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema = vol.Schema(
                 {
                     vol.Required(CONF_HOST, description={"suggested_value": "192.168.10.1"}): str,
+                    vol.Required(
+                        CONF_SCAN_INTERVAL,
+                        default=self.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                    ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))),
                     vol.Required(CONF_USERNAME, description={"suggested_value": "test"}): str,
                     vol.Required(CONF_PASSWORD, description={"suggested_value": "12341"}): selector.TextSelector(
                         selector.TextSelectorConfig(
