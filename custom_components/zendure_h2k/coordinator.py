@@ -21,17 +21,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class ExampleAPIData:
+class ZendureAPIData:
     """Class to hold api data."""
 
     controller_name: str
     devices: list[Device]
 
 
-class ExampleCoordinator(DataUpdateCoordinator):
-    """My example coordinator."""
+class ZendureCoordinator(DataUpdateCoordinator):
+    """My Zendure coordinator."""
 
-    data: ExampleAPIData
+    data: ZendureAPIData
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
@@ -79,7 +79,7 @@ class ExampleCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         # What is returned here is stored in self.data by the DataUpdateCoordinator
-        return ExampleAPIData(self.api.controller_name, devices)
+        return ZendureAPIData(self.api.controller_name, devices)
 
     def get_device_by_id(
         self, device_type: DeviceType, device_id: int

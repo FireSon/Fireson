@@ -1,7 +1,7 @@
 """API Placeholder.
 
 You should create your api seperately and have it hosted on PYPI.  This is included here for the sole purpose
-of making this example code executable.
+of making this Zendure code executable.
 """
 
 from dataclasses import dataclass
@@ -44,7 +44,7 @@ class Device:
 
 
 class API:
-    """Class for example API."""
+    """Class for Zendure API."""
 
     def __init__(self, host: str, user: str, pwd: str) -> None:
         """Initialise."""

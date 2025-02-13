@@ -4,7 +4,7 @@ So this is your starting point into writing your first Home Assistant integratio
 
 Well, firstly, I hope you enjoy doing it.  There is something very satisfying to be able to build something into Home Assistant that controls your devices!
 
-So, below is a more detailed explanaition of the major building blocks demonstrated in this example.
+So, below is a more detailed explanaition of the major building blocks demonstrated in this Zendure.
 
 If you get stuck, either post a forum question or an issue on this github repo and I'll try my best to help you.  As a note, it always helps if I can see your code, so please make sure you provide a link to that.
 
@@ -14,7 +14,7 @@ If you get stuck, either post a forum question or an issue on this github repo a
 
     See the config_flow.py file with comments to see how it works.  This is much enhanced from the scaffold version to include a reconfigure flow and options flow.
 
-    It is possible (and quite simple) to do multi step flows, which will be covered in another later example.
+    It is possible (and quite simple) to do multi step flows, which will be covered in another later Zendure.
 
 2. **The DataUpdateCoordinator**
 
@@ -26,6 +26,6 @@ If you get stuck, either post a forum question or an issue on this github repo a
 
 4. **Platform Entities**
 
-    These are your sensors, switches, lights etc, and this example covers the 2 most simple ones of binary sensors, things that only have 2 states, ie On/Off or Open/Closed or Hot/Cold etc and sensors, things that can have many states ie temperature, power, luminance etc.
+    These are your sensors, switches, lights etc, and this Zendure covers the 2 most simple ones of binary sensors, things that only have 2 states, ie On/Off or Open/Closed or Hot/Cold etc and sensors, things that can have many states ie temperature, power, luminance etc.
 
     There are within Home Assistant things called device classes that describe what your sensor is and set icons, units etc for it.
