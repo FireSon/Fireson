@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector
 
 from .api import API, APIAuthError, APIConnectionError
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
@@ -102,6 +103,11 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST, description={"suggested_value": "10.10.10.1"}): str,
                     vol.Required(CONF_USERNAME, description={"suggested_value": "test"}): str,
                     vol.Required(CONF_PASSWORD, description={"suggested_value": "1234"}): str,
+                    vol.Required(CONF_PASSWORD): selector.TextSelector(
+                        selector.TextSelectorConfig(
+                            type=selector.TextSelectorType.PASSWORD,
+                        ),
+                    ),
                 }
             ), errors=errors
         )
