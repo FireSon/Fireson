@@ -1,4 +1,4 @@
-"""Config flow for Zendure integration."""
+"""Config flow for Integration 101 Template integration."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .api import API, APIAuthError, APIConnectionError
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,11 +59,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth from err
     except APIConnectionError as err:
         raise CannotConnect from err
-    return {"title": f"Zendure Integration - {data[CONF_HOST]}"}
+    return {"title": f"Example Integration - {data[CONF_HOST]}"}
 
 
-class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Zendure Integration."""
+class ExampleConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Example Integration."""
 
     VERSION = 1
     _input_data: dict[str, Any]
@@ -72,9 +72,9 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        # Remove this method and the ZendureOptionsFlowHandler class
+        # Remove this method and the ExampleOptionsFlowHandler class
         # if you do not want any options for your integration.
-        return ZendureOptionsFlowHandler(config_entry)
+        return ExampleOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -154,33 +154,33 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-# class ZendureOptionsFlowHandler(OptionsFlow):
-#     """Handles the options flow."""
+class ExampleOptionsFlowHandler(OptionsFlow):
+    """Handles the options flow."""
 
-#     def __init__(self, config_entry: ConfigEntry) -> None:
-#         """Initialize options flow."""
-#         self.config_entry = config_entry
-#         self.options = dict(config_entry.options)
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
 
-#     async def async_step_init(self, user_input=None):
-#         """Handle options flow."""
-#         if user_input is not None:
-#             options = self.config_entry.options | user_input
-#             return self.async_create_entry(title="", data=options)
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+        if user_input is not None:
+            options = self.config_entry.options | user_input
+            return self.async_create_entry(title="", data=options)
 
-#         # It is recommended to prepopulate options fields with default values if available.
-#         # These will be the same default values you use on your coordinator for setting variable values
-#         # if the option has not been set.
-#         data_schema = vol.Schema(
-#             {
-#                 vol.Required(
-#                     CONF_SCAN_INTERVAL,
-#                     default=self.options.get(CONF_SCAN_INTERVAL, 60),
-#                 ): (vol.All(vol.Coerce(int), vol.Clamp(min=10))),
-#             }
-#         )
+        # It is recommended to prepopulate options fields with default values if available.
+        # These will be the same default values you use on your coordinator for setting variable values
+        # if the option has not been set.
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SCAN_INTERVAL,
+                    default=self.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                ): (vol.All(vol.Coerce(int), vol.Clamp(min=MIN_SCAN_INTERVAL))),
+            }
+        )
 
-#         return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 class CannotConnect(HomeAssistantError):
