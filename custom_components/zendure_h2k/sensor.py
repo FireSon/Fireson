@@ -29,6 +29,7 @@ async def async_setup_entry(
     """Set up the Sensors."""
     # This gets the data update coordinator from the config entry runtime data as specified in your __init__.py
     coordinator: ZendureCoordinator = config_entry.runtime_data.coordinator
+    coordinator.setSensor = async_add_entities
 
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.

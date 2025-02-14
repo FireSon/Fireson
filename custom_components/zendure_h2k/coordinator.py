@@ -13,6 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import API, APIAuthError, Device, DeviceType
 from .const import DEFAULT_SCAN_INTERVAL
@@ -62,8 +63,8 @@ class ZendureCoordinator(DataUpdateCoordinator):
     """My Zendure coordinator."""
 
     data: ZendureAPIData
-    # addBinarySensor: AddEntitiesCallback
-    # addSensor: AddEntitiesCallback
+    addBinarySensor: AddEntitiesCallback
+    addSensor: AddEntitiesCallback
     hypers: dict = { "123": Hyper2000("123"), "234" : Hyper2000("234") }
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
