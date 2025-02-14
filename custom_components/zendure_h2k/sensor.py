@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import MyConfigEntry
 from .api import Device, DeviceType
 from .const import DOMAIN
-from .coordinator import ZendureCoordinator
+from .coordinator import Hyper2000, ZendureCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,3 +125,16 @@ class ZendureSensor(CoordinatorEntity, SensorEntity):
         attrs = {}
         attrs["extra_info"] = "Extra Info"
         return attrs
+
+class Hyper2000Sensor(Hyper2000, SensorEntity):  # type: ignore[misc]
+    """Representation of a Plugwise USB sensor."""
+
+    def __init__(
+        self
+    ) -> None:
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the native value of the sensor."""
+        return float(1.123)
+
