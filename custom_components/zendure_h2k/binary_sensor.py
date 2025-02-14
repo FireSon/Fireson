@@ -24,21 +24,9 @@ async def async_setup_entry(
     config_entry: MyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    """Set up the Binary Sensors."""
-    # This gets the data update coordinator from the config entry runtime data as specified in your __init__.py
+    """Set up the Coordinator setSensor."""
     coordinator: ZendureCoordinator = config_entry.runtime_data.coordinator
-
-    # Enumerate all the binary sensors in your data value from your DataUpdateCoordinator and add an instance of your binary sensor class
-    # to a list for each one.
-    # This maybe different in your specific case, depending on how your data is structured
-    binary_sensors = [
-        ZendureBinarySensor(coordinator, device)
-        for device in coordinator.data.devices
-        if device.device_type == DeviceType.DOOR_SENSOR
-    ]
-
-    # Create the binary sensors.
-    async_add_entities(binary_sensors)
+    coordinator.addBinarySensor = async_add_entities
 
 
 class ZendureBinarySensor(CoordinatorEntity, BinarySensorEntity):
