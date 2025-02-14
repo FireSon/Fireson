@@ -28,10 +28,43 @@ class ZendureAPIData:
     devices: list[Device]
 
 
+class Hyper2000():
+    """Zendure Hyper2000."""
+
+    def __init__(
+        self, device_id: str
+    ) -> None:
+        """Initialize the sensor collection."""
+        self.device_id = device_id
+        self.sensors: dict = {
+            # "todayEnergy" : ZendureSensorEntityDescription(
+            #     key="power_8s",
+            #     name="Power usage 8 seconds",
+            #     device_class=SensorDeviceClass.POWER,
+            #     native_unit_of_measurement=UnitOfPower.WATT,
+            #     state_request_method="current_power_usage_8_sec",
+            #     entity_registry_enabled_default=False,
+            # ),
+            # "temperatureUnit" : ZendureSensorEntityDescription(
+            #     key="temperatureUnit",
+            #     name="Power usage 8 seconds",
+            #     device_class=SensorDeviceClass.POWER,
+            #     native_unit_of_measurement=UnitOfPower.WATT,
+            #     state_request_method="current_power_usage_8_sec",
+            #     entity_registry_enabled_default=False,
+            # ),
+        }
+        self.binarysensors: dict = {}
+        self.properties: dict = {}
+
+
 class ZendureCoordinator(DataUpdateCoordinator):
     """My Zendure coordinator."""
 
     data: ZendureAPIData
+    # addBinarySensor: AddEntitiesCallback
+    # addSensor: AddEntitiesCallback
+    hypers: dict = { "123": Hyper2000("123"), "234" : Hyper2000("234") }
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
