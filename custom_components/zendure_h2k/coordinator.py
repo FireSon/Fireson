@@ -16,7 +16,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import API, APIAuthError, Device, DeviceType
-from .sensor import Hyper2000Sensor
 from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,18 +38,22 @@ class Hyper2000():
         """Initialize the sensor collection."""
         self.device_id = device_id
         self.sensors: dict = {
-            "todayEnergy" : Hyper2000Sensor(
-                key="power_8s",
-                name="Power usage 8 seconds",
-                state_request_method="current_power_usage_8_sec",
-                entity_registry_enabled_default=False,
-            ),
-            "temperatureUnit" : Hyper2000Sensor(
-                key="temperatureUnit",
-                name="Power usage 8 seconds",
-                state_request_method="current_power_usage_8_sec",
-                entity_registry_enabled_default=False,
-            ),
+            # "todayEnergy" : ZendureSensorEntityDescription(
+            #     key="power_8s",
+            #     name="Power usage 8 seconds",
+            #     device_class=SensorDeviceClass.POWER,
+            #     native_unit_of_measurement=UnitOfPower.WATT,
+            #     state_request_method="current_power_usage_8_sec",
+            #     entity_registry_enabled_default=False,
+            # ),
+            # "temperatureUnit" : ZendureSensorEntityDescription(
+            #     key="temperatureUnit",
+            #     name="Power usage 8 seconds",
+            #     device_class=SensorDeviceClass.POWER,
+            #     native_unit_of_measurement=UnitOfPower.WATT,
+            #     state_request_method="current_power_usage_8_sec",
+            #     entity_registry_enabled_default=False,
+            # ),
         }
         self.binarysensors: dict = {}
         self.properties: dict = {}
@@ -62,7 +65,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
     data: ZendureAPIData
     addBinarySensor: AddEntitiesCallback
     addSensor: AddEntitiesCallback
-    hypers: dict = {}
+    hypers: dict = { "123": Hyper2000("123"), "234" : Hyper2000("234") }
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
@@ -94,12 +97,6 @@ class ZendureCoordinator(DataUpdateCoordinator):
 
     async def async_update_data(self):
         """Fetch data from API endpoint.
-
-        if not self.hypers:
-            hypers = { "123": Hyper2000("123"), "234" : Hyper2000("234") }
-            for hyper in hypers:
-                for sensor in hyper.sensors:
-                    self.addSensor(sensor)
 
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
