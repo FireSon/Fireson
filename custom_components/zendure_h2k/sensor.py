@@ -49,8 +49,6 @@ async def async_setup_entry(
             _LOGGER.debug('adding sensors to hass')
             async_add_entities(sensors)
 
-    hass.async_create_task(async_add_sensors)
-
     def discovered_device():
         """Add sensors for newly discovered device."""
         _LOGGER.debug('do callback')
@@ -58,6 +56,8 @@ async def async_setup_entry(
 
     # Listen for discovered nodes
     coordinator.subscribe_hyper_callback(discovered_device)
+
+    hass.async_create_task(async_add_sensors)
 
 
 class ZendureSensor(CoordinatorEntity, SensorEntity):
