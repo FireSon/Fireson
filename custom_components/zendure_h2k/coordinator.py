@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import API, APIAuthError, Device, DeviceType, Hyper2000
 from .const import DEFAULT_SCAN_INTERVAL
+from .sensor import ZendureSensor
 
 _LOGGER = logging.getLogger(__name__)
 
