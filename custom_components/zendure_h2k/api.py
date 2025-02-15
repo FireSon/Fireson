@@ -7,6 +7,8 @@ of making this Zendure code executable.
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
+
+from .sensor import Hyper2000Sensor as hyperSensor
 from random import choice, randrange
 
 # from .coordinator import ZendureCoordinator
@@ -42,6 +44,7 @@ class Hyper2000:
         """Initialise."""
         self.id = id
         self.connected: bool = False
+        self.sensors : dict[str, hyperSensor]
 
 
 @dataclass
