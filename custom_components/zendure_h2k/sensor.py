@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MyConfigEntry
-from .api import Device, DeviceType
+from .api import Device, DeviceType, Hyper2000
 from .const import DOMAIN
 from .coordinator import ZendureCoordinator
 
@@ -136,3 +136,32 @@ class ZendureSensor(CoordinatorEntity, SensorEntity):
         attrs = {}
         attrs["extra_info"] = "Extra Info"
         return attrs
+
+
+class Hyper2000Sensor(CoordinatorEntity, SensorEntity):
+    """Implementation of a sensor."""
+
+    def __init__(self, coordinator: ZendureCoordinator, hyper: Hyper2000, unique_id: str) -> None:
+        """Initialise sensor."""
+        super().__init__(coordinator)
+        self.hyper = hyper
+        self.unique_id = unique_id
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique id."""
+        # All entities must have a unique id.  Think carefully what you want this to be as
+        # changing it later will cause HA to create new entities.
+        return f"{DOMAIN}-{self.hyper.id}-{self.unique_id}"
+
+    @property
+    def native_value(self) -> int | float:
+        """Return the state of the entity."""
+        # Using native value and native unit of measurement, allows you to change units
+        # in Lovelace and HA will automatically calculate the correct value.
+        return float(2.345)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return 'Hyper2000 sensor'

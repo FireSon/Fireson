@@ -32,6 +32,13 @@ DEVICES = [
 ]
 
 
+class Hyper2000:
+    def __init__(self, id: str) -> None:
+        """Initialise."""
+        self.id = id
+        self.connected: bool = False
+
+
 @dataclass
 class Device:
     """API device."""
