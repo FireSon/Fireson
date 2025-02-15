@@ -22,17 +22,13 @@ class DeviceType(StrEnum):
 
 DEVICES = [
     {"id": 1, "type": DeviceType.TEMP_SENSOR},
-    {"id": 1, "type": DeviceType.DOOR_SENSOR},
     {"id": 2, "type": DeviceType.TEMP_SENSOR},
-    {"id": 2, "type": DeviceType.DOOR_SENSOR},
     {"id": 3, "type": DeviceType.TEMP_SENSOR},
-    {"id": 3, "type": DeviceType.DOOR_SENSOR},
     {"id": 4, "type": DeviceType.TEMP_SENSOR},
+    {"id": 1, "type": DeviceType.DOOR_SENSOR},
+    {"id": 2, "type": DeviceType.DOOR_SENSOR},
+    {"id": 3, "type": DeviceType.DOOR_SENSOR},
     {"id": 4, "type": DeviceType.DOOR_SENSOR},
-    {"id": 5, "type": DeviceType.TEMP_SENSOR},
-    {"id": 5, "type": DeviceType.DOOR_SENSOR},
-    {"id": 6, "type": DeviceType.TEMP_SENSOR},
-    {"id": 6, "type": DeviceType.DOOR_SENSOR},
 ]
 
 
