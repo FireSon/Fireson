@@ -95,11 +95,11 @@ class ZendureCoordinator(DataUpdateCoordinator):
     async def async_update_data(self):
         """Fetch data from API endpoint.
 
-        # if not self.hypers:
-        hypers = { "123": Hyper2000("123"), "234" : Hyper2000("234") }
-        #     for hyper in hypers:
-        #         for sensor in hyper.sensors:
-        #             self.addSensor(sensor)
+        if not self.hypers:
+            hypers = { "123": Hyper2000("123"), "234" : Hyper2000("234") }
+            for hyper in hypers:
+                for sensor in hyper.sensors:
+                    self.addSensor(sensor)
 
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
