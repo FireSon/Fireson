@@ -62,7 +62,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         )
 
         # Initialise your api here
-        self.api = API(host=self.host, user=self.user, pwd=self.pwd, coord = self)
+        self.api = API(host=self.host, user=self.user, pwd=self.pwd)
 
     async def async_update_data(self):
         """Fetch data from API endpoint.

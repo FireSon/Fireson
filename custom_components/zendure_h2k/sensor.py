@@ -90,7 +90,7 @@ class ZendureSensor(CoordinatorEntity, SensorEntity):
         return DeviceInfo(
             name=f"ZendureDevice{self.device.device_id}",
             manufacturer="Zendure",
-            model="Door&Temp v1",
+            model="Hyper2000",
             sw_version="1.0",
             identifiers={
                 (
