@@ -80,6 +80,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
             if not self.api.connected:
                 await self.hass.async_add_executor_job(self.api.connect)
             devices = await self.hass.async_add_executor_job(self.api.get_devices)
+            self.do_callback()
         except APIAuthError as err:
             _LOGGER.error(err)
             raise UpdateFailed(err) from err
