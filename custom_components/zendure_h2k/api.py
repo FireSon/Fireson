@@ -107,7 +107,7 @@ class API:
                 state=self.get_device_value(device.get("id"), device.get("type")),
             )
             for device in DEVICES
-            if device.device_id <= self.counter
+            if device.get("id") <= self.counter
         ]
 
 
