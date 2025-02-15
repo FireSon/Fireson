@@ -34,14 +34,27 @@ async def async_setup_entry(
     # Enumerate all the sensors in your data value from your DataUpdateCoordinator and add an instance of your sensor class
     # to a list for each one.
     # This maybe different in your specific case, depending on how your data is structured
-    sensors = [
-        ZendureSensor(coordinator, device)
-        for device in coordinator.data.devices
-        if device.device_type == DeviceType.TEMP_SENSOR
-    ]
 
-    # Create the sensors.
-    async_add_entities(sensors)
+    async def async_add_sensors():
+        """Add plugwise sensors for device."""
+        sensors: list[ZendureSensor] = [
+            ZendureSensor(coordinator, device)
+            for device in coordinator.data.devices
+            if device.device_type == DeviceType.TEMP_SENSOR and device.isNew
+        ]
+
+        # Create the sensors.
+        if sensors:
+            async_add_entities(sensors)
+
+    hass.async_create_task(async_add_sensors)
+
+    def discovered_device():
+        """Add sensors for newly discovered device."""
+        hass.async_create_task(async_add_sensors)
+
+    # Listen for discovered nodes
+    coordinator.subscribe_hyper_callback(discovered_device)
 
 
 class ZendureSensor(CoordinatorEntity, SensorEntity):

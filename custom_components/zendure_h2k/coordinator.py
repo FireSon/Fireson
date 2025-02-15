@@ -90,11 +90,11 @@ class ZendureCoordinator(DataUpdateCoordinator):
         # What is returned here is stored in self.data by the DataUpdateCoordinator
         return ZendureAPIData(self.api.controller_name, devices)
 
-    def subscribe_stick_callback(self, callback):
+    def subscribe_hyper_callback(self, callback):
         """ Subscribe callback to execute """
         self._hyper_callbacks.append(callback)
 
-    def unsubscribe_stick_callback(self, callback):
+    def unsubscribe_hyper_callback(self, callback):
         """ Register callback to execute """
         self._hyper_callbacks.remove(callback)
 
