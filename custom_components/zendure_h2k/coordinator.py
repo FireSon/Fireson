@@ -41,7 +41,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         self.host = config_entry.data[CONF_HOST]
         self.user = config_entry.data[CONF_USERNAME]
         self.pwd = config_entry.data[CONF_PASSWORD]
-        self._hyper_callbacks = {}
+        self._hyper_callbacks = []
 
         # set variables from options.  You need a default here incase options have not been set
         self.poll_interval = config_entry.options.get(
