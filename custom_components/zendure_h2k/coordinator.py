@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import API, APIAuthError, Device, DeviceType, Hyper2000
+from .api import API, APIAuthError, Device, DeviceType
 from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,6 @@ class ZendureCoordinator(DataUpdateCoordinator):
     """My Zendure coordinator."""
 
     data: ZendureAPIData
-    # hypers: dict[str, Hyper2000] = {}
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
