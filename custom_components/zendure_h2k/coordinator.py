@@ -60,9 +60,9 @@ class ZendureCoordinator(DataUpdateCoordinator):
     """My Zendure coordinator."""
 
     data: ZendureAPIData
-    addBinarySensor: AddEntitiesCallback
-    addSensor: AddEntitiesCallback
-    hypers: dict = {}
+    # addBinarySensor: AddEntitiesCallback
+    # addSensor: AddEntitiesCallback
+    # hypers: dict = {}
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
