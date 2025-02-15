@@ -39,18 +39,18 @@ class Hyper2000():
         """Initialize the sensor collection."""
         self.device_id = device_id
         self.sensors: dict = {
-            "todayEnergy" : Hyper2000Sensor(
-                key="power_8s",
-                name="Power usage 8 seconds",
-                state_request_method="current_power_usage_8_sec",
-                entity_registry_enabled_default=False,
-            ),
-            "temperatureUnit" : Hyper2000Sensor(
-                key="temperatureUnit",
-                name="Power usage 8 seconds",
-                state_request_method="current_power_usage_8_sec",
-                entity_registry_enabled_default=False,
-            ),
+            # "todayEnergy" : Hyper2000Sensor(
+            #     key="power_8s",
+            #     name="Power usage 8 seconds",
+            #     state_request_method="current_power_usage_8_sec",
+            #     entity_registry_enabled_default=False,
+            # ),
+            # "temperatureUnit" : Hyper2000Sensor(
+            #     key="temperatureUnit",
+            #     name="Power usage 8 seconds",
+            #     state_request_method="current_power_usage_8_sec",
+            #     entity_registry_enabled_default=False,
+            # ),
         }
         self.binarysensors: dict = {}
         self.properties: dict = {}
@@ -96,7 +96,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         """Fetch data from API endpoint.
 
         # if not self.hypers:
-        hypers = { "123": Hyper2000("123"), "234" : Hyper2000("234") }
+        # hypers = { "123": Hyper2000("123"), "234" : Hyper2000("234") }
         #     for hyper in hypers:
         #         for sensor in hyper.sensors:
         #             self.addSensor(sensor)
