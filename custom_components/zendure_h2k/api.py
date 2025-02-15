@@ -9,6 +9,9 @@ from enum import StrEnum
 import logging
 from random import choice, randrange
 
+from custom_components.zendure_h2k.coordinator import ZendureCoordinator
+from custom_components.zendure_h2k.sensor import ZendureSensor
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -53,13 +56,14 @@ class Device:
 class API:
     """Class for Zendure API."""
 
-    def __init__(self, host: str, user: str, pwd: str) -> None:
+    def __init__(self, host: str, user: str, pwd: str, coord : ZendureCoordinator) -> None:
         """Initialise."""
         self.host = host
         self.user = user
         self.pwd = pwd
         self.connected: bool = False
         self.counter: int = -1
+        self.coordinator = coord
 
     @property
     def controller_name(self) -> str:
@@ -96,7 +100,7 @@ class API:
                 for device in DEVICES
             ]
 
-        return [
+        dev = [
             Device(
                 device_id=device.get("id"),
                 device_unique_id=self.get_device_unique_id(
@@ -109,6 +113,17 @@ class API:
             for device in DEVICES
             if device.get("id") <= self.counter
         ]
+
+        sensors = [
+            ZendureSensor(self.coordinator, device)
+            for device in dev
+            if device.device_type == DeviceType.TEMP_SENSOR
+        ]
+
+        # Create the sensors.
+        self.coordinator.addSensor(sensors)
+
+        return dev
 
 
     def get_device_unique_id(self, device_id: str, device_type: DeviceType) -> str:
