@@ -9,7 +9,7 @@ from enum import StrEnum
 import logging
 from random import choice, randrange
 
-from .coordinator import ZendureCoordinator
+# from .coordinator import ZendureCoordinator
 from .sensor import ZendureSensor
 
 _LOGGER = logging.getLogger(__name__)
