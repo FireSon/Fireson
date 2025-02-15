@@ -22,12 +22,12 @@ class DeviceType(StrEnum):
 
 DEVICES = [
     {"id": 1, "type": DeviceType.TEMP_SENSOR},
-    {"id": 2, "type": DeviceType.TEMP_SENSOR},
-    {"id": 3, "type": DeviceType.TEMP_SENSOR},
-    {"id": 4, "type": DeviceType.TEMP_SENSOR},
     {"id": 1, "type": DeviceType.DOOR_SENSOR},
+    {"id": 2, "type": DeviceType.TEMP_SENSOR},
     {"id": 2, "type": DeviceType.DOOR_SENSOR},
+    {"id": 3, "type": DeviceType.TEMP_SENSOR},
     {"id": 3, "type": DeviceType.DOOR_SENSOR},
+    {"id": 4, "type": DeviceType.TEMP_SENSOR},
     {"id": 4, "type": DeviceType.DOOR_SENSOR},
 ]
 
@@ -59,6 +59,7 @@ class API:
         self.user = user
         self.pwd = pwd
         self.connected: bool = False
+        self.counter: int = -1
 
     @property
     def controller_name(self) -> str:
@@ -79,6 +80,22 @@ class API:
 
     def get_devices(self) -> list[Device]:
         """Get devices on api."""
+        self.counter += 1
+
+        if self.counter > 4:
+            return [
+                Device(
+                    device_id=device.get("id"),
+                    device_unique_id=self.get_device_unique_id(
+                        device.get("id"), device.get("type")
+                    ),
+                    device_type=device.get("type"),
+                    name=self.get_device_name(device.get("id"), device.get("type")),
+                    state=self.get_device_value(device.get("id"), device.get("type")),
+                )
+                for device in DEVICES
+            ]
+
         return [
             Device(
                 device_id=device.get("id"),
@@ -90,7 +107,9 @@ class API:
                 state=self.get_device_value(device.get("id"), device.get("type")),
             )
             for device in DEVICES
+            if device.device_id <= self.counter
         ]
+
 
     def get_device_unique_id(self, device_id: str, device_type: DeviceType) -> str:
         """Return a unique device id."""
