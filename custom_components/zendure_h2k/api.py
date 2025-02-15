@@ -32,6 +32,8 @@ DEVICES = [
     {"id": 3, "type": DeviceType.DOOR_SENSOR},
     {"id": 4, "type": DeviceType.TEMP_SENSOR},
     {"id": 4, "type": DeviceType.DOOR_SENSOR},
+    {"id": 5, "type": DeviceType.TEMP_SENSOR},
+    {"id": 5, "type": DeviceType.DOOR_SENSOR},
 ]
 
 
@@ -56,14 +58,13 @@ class Device:
 class API:
     """Class for Zendure API."""
 
-    def __init__(self, host: str, user: str, pwd: str, coord : ZendureCoordinator) -> None:
+    def __init__(self, host: str, user: str, pwd: str) -> None:
         """Initialise."""
         self.host = host
         self.user = user
         self.pwd = pwd
         self.connected: bool = False
         self.counter: int = -1
-        self.coordinator = coord
 
     @property
     def controller_name(self) -> str:
@@ -86,7 +87,7 @@ class API:
         """Get devices on api."""
         self.counter += 1
 
-        if self.counter > 4:
+        if self.counter > 5:
             return [
                 Device(
                     device_id=device.get("id"),
