@@ -104,6 +104,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         """ Execute callbacks registered for specified callback type """
         for callback in self._hyper_callbacks:
             try:
+                _LOGGER.debug('execute callback')
                 if callback_arg is None:
                     callback()
                 else:
