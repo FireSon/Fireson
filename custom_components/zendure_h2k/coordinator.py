@@ -41,6 +41,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         self.host = config_entry.data[CONF_HOST]
         self.user = config_entry.data[CONF_USERNAME]
         self.pwd = config_entry.data[CONF_PASSWORD]
+        self._hyper_callbacks = {}
 
         # set variables from options.  You need a default here incase options have not been set
         self.poll_interval = config_entry.options.get(
@@ -88,6 +89,25 @@ class ZendureCoordinator(DataUpdateCoordinator):
 
         # What is returned here is stored in self.data by the DataUpdateCoordinator
         return ZendureAPIData(self.api.controller_name, devices)
+
+    def subscribe_stick_callback(self, callback):
+        """ Subscribe callback to execute """
+        self._hyper_callbacks.append(callback)
+
+    def unsubscribe_stick_callback(self, callback):
+        """ Register callback to execute """
+        self._hyper_callbacks.remove(callback)
+
+    def do_callback(self, callback_arg=None):
+        """ Execute callbacks registered for specified callback type """
+        for callback in self._hyper_callbacks:
+            try:
+                if callback_arg is None:
+                    callback()
+                else:
+                    callback(callback_arg)
+            except Exception as e:
+                self.logger.error("Error while executing callback : %s", e)
 
     def get_device_by_id(
         self, device_type: DeviceType, device_id: int

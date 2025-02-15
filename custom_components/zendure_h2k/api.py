@@ -53,7 +53,8 @@ class Device:
     device_type: DeviceType
     name: str
     state: int | bool
-
+    isNew: bool
+  
 
 class API:
     """Class for Zendure API."""
@@ -110,6 +111,7 @@ class API:
                 device_type=device.get("type"),
                 name=self.get_device_name(device.get("id"), device.get("type")),
                 state=self.get_device_value(device.get("id"), device.get("type")),
+                isNew=device.get("id")==self.counter,
             )
             for device in DEVICES
             if device.get("id") <= self.counter
