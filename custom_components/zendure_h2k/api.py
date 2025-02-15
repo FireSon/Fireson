@@ -114,14 +114,14 @@ class API:
             if device.get("id") <= self.counter
         ]
 
-        sensors = [
-            ZendureSensor(self.coordinator, device)
-            for device in dev
-            if device.device_type == DeviceType.TEMP_SENSOR
-        ]
+        # sensors = [
+        #     ZendureSensor(self.coordinator, device)
+        #     for device in dev
+        #     if device.device_type == DeviceType.TEMP_SENSOR
+        # ]
 
-        # Create the sensors.
-        self.coordinator.addSensor(sensors)
+        # # Create the sensors.
+        # self.coordinator.addSensor(sensors)
 
         return dev
 

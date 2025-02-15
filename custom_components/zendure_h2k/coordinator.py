@@ -35,6 +35,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
     data: ZendureAPIData
     hypers: dict[str, Hyper2000] = {}
     addSensor: AddEntitiesCallback
+
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
 
@@ -61,7 +62,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         )
 
         # Initialise your api here
-        self.api = API(host=self.host, user=self.user, pwd=self.pwd)
+        self.api = API(host=self.host, user=self.user, pwd=self.pwd, coord = self)
 
     async def async_update_data(self):
         """Fetch data from API endpoint.
