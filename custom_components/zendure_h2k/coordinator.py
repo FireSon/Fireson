@@ -32,7 +32,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
     """My Zendure coordinator."""
 
     data: ZendureAPIData
-    hypers: dict[str, Hyper2000] = {}
+    # hypers: dict[str, Hyper2000] = {}
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
@@ -69,12 +69,12 @@ class ZendureCoordinator(DataUpdateCoordinator):
         so entities can quickly look up their data.
         """
         try:
-            if not self.hypers:
-                self.hypers =   {
-                    "123", Hyper2000("123"),
-                    "456", Hyper2000("456"),
-                    "789", Hyper2000("789"),
-                }
+            # if not self.hypers:
+            #     self.hypers =   {
+            #         "123", Hyper2000("123"),
+            #         "456", Hyper2000("456"),
+            #         "789", Hyper2000("789"),
+            #     }
 
             if not self.api.connected:
                 await self.hass.async_add_executor_job(self.api.connect)

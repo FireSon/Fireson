@@ -64,7 +64,7 @@ class API:
         self.user = user
         self.pwd = pwd
         self.connected: bool = False
-        self.counter: int = -1
+        self.counter: int = 0
 
     @property
     def controller_name(self) -> str:
@@ -101,7 +101,7 @@ class API:
                 for device in DEVICES
             ]
 
-        dev = [
+        return [
             Device(
                 device_id=device.get("id"),
                 device_unique_id=self.get_device_unique_id(
@@ -114,17 +114,6 @@ class API:
             for device in DEVICES
             if device.get("id") <= self.counter
         ]
-
-        # sensors = [
-        #     ZendureSensor(self.coordinator, device)
-        #     for device in dev
-        #     if device.device_type == DeviceType.TEMP_SENSOR
-        # ]
-
-        # # Create the sensors.
-        # self.coordinator.addSensor(sensors)
-
-        return dev
 
 
     def get_device_unique_id(self, device_id: str, device_type: DeviceType) -> str:
