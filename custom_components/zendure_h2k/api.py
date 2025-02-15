@@ -9,8 +9,8 @@ from enum import StrEnum
 import logging
 from random import choice, randrange
 
-from custom_components.zendure_h2k.coordinator import ZendureCoordinator
-from custom_components.zendure_h2k.sensor import ZendureSensor
+from .coordinator import ZendureCoordinator
+from .sensor import ZendureSensor
 
 _LOGGER = logging.getLogger(__name__)
 
