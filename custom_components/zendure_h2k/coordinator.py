@@ -54,19 +54,19 @@ class ZendureCoordinator(DataUpdateCoordinator):
         # Set variables from values entered in config flow setup
         self.consumed: str = config_entry.data[CONF_CONSUMED]
         self.produced: str = config_entry.data[CONF_PRODUCED]
-        _LOGGER.debug(f"Energy: {self.consumed} - {self.produced}")
+        _LOGGER.debug(f"Energy sensors: {self.consumed} - {self.produced}")
 
         async_track_state_change_event(
             self._hass,
-            self.consumed,
+            [self.consumed, self.produced],
             self._async_update_energy,
         )
 
-        async_track_state_change_event(
-            self._hass,
-            self.produced,
-            self._async_update_energy,
-        )
+        # async_track_state_change_event(
+        #     self._hass,
+        #     self.produced,
+        #     self._async_update_energy,
+        # )
 
         # set variables from options.  You need a default here incase options have not been set
         self.poll_interval = config_entry.options.get(
