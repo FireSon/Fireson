@@ -10,14 +10,14 @@ import os
 import sys
 import logging
 import json
-import asyncio
-from requests_html import AsyncHTMLSession
+from flask import session
 import requests
 
 from random import choice, randrange
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,8 @@ class Device:
 
 class API:
     """Class for Zendure API."""
-    def __init__(self, zen_api, username, password):
+    def __init__(self, hass: HomeAssistant, zen_api, username, password):
+        self.hass = hass
         self.baseUrl = f'{SF_API_BASE_URL}'
         self.zen_api = zen_api
         self.username = username
@@ -77,12 +78,11 @@ class API:
         self.session = None
 
     async def connect(self):
-        self.session = AsyncHTMLSession()
+        self.session = async_get_clientsession(self.hass)
         retry = Retry(connect=3, backoff_factor=0.5)
         adapter = HTTPAdapter(max_retries=retry)
-        self.session.verify = True
-        self.session.mount('http://', adapter)
-        self.session.mount('https://', adapter)
+        # self.session.mount('http://', adapter)
+        # self.session.mount('https://', adapter)
         self.session.headers = {
                 'Content-Type':'application/json',
                 'Accept-Language': 'en-EN',
@@ -91,7 +91,6 @@ class API:
                 'Accept': '*/*',
                 'Blade-Auth': 'bearer (null)'
             }
-        self.session.params = None
 
         SF_AUTH_PATH = "/auth/app/token"
         authBody = {

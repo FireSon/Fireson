@@ -85,7 +85,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"Energy initalized: {self.consumed} - {self.produced}")
 
         # Initialise your api here
-        self.api = API(self.host, self.user, self.pwd)
+        self.api = API(self._hass, self.host, self.user, self.pwd)
 
     @callback
     def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
