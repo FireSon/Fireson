@@ -15,6 +15,12 @@ from homeassistant.core import DOMAIN, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    State,
+    callback as ha_callback,
+)
 
 from .api import API, APIAuthError, Device, DeviceType, Hyper2000
 from .const import (
@@ -85,8 +91,9 @@ class ZendureCoordinator(DataUpdateCoordinator):
         # Initialise your api here
         self.api = API(host=self.host, user=self.user, pwd=self.pwd)
 
-    async def _async_update_energy(self, event):  # pylint: disable=unused-argument
-        """Handle energy usage changes."""
+    @ha_callback
+    def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
+        """Handle linked battery charging sensor state change listener callback."""
         _LOGGER.debug('Energy usage callback')
 
     async def async_update_data(self):
