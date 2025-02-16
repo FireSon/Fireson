@@ -89,7 +89,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         self.api = API(host=self.host, user=self.user, pwd=self.pwd)
 
     @callback
-    async def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
+    def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
         """Publish state change to MQTT."""
         _LOGGER.debug('Energy usage callback')
         if (new_state := event.data["new_state"]) is None:
