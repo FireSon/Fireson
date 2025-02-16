@@ -37,7 +37,6 @@ async def async_setup_entry(
 
     async def async_add_sensors():
         """Add plugwise sensors for device."""
-        _LOGGER.debug('adding sensors')
         sensors: list[ZendureSensor] = [
             ZendureSensor(coordinator, device)
             for device in coordinator.data.devices
@@ -46,12 +45,10 @@ async def async_setup_entry(
 
         # Create the sensors.
         if sensors:
-            _LOGGER.debug('adding sensors to hass')
             async_add_entities(sensors)
 
     def discovered_device():
         """Add sensors for newly discovered device."""
-        _LOGGER.debug('do callback')
         hass.async_create_task(async_add_sensors())
 
     # Listen for discovered nodes
