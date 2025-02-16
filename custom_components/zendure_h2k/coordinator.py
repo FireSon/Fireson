@@ -20,7 +20,7 @@ from homeassistant.core import (
     EventStateChangedData,
     HassJobType,
     State,
-    callback as ha_callback,
+    callback,
 )
 
 from .api import API, APIAuthError, Device, DeviceType, Hyper2000
@@ -58,12 +58,6 @@ class ZendureCoordinator(DataUpdateCoordinator):
         self.pwd = config_entry.data[CONF_PASSWORD]
         self._hyper_callbacks = []
 
-        # async_track_state_change_event(
-        #     self._hass,
-        #     self.produced,
-        #     self._async_update_energy,
-        # )
-
         # set variables from options.  You need a default here incase options have not been set
         self.poll_interval = config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
@@ -84,14 +78,8 @@ class ZendureCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"Energy sensors: {self.consumed} - {self.produced}")
 
         async_track_state_change_event(
-            self._hass,
-            self.consumed,
-            self._async_update_energy,
-            job_type=HassJobType.Callback,
-        )
-        async_track_state_change_event(
-            self._hass,
-            self.produced,
+            self.hass,
+            [self.consumed, self.produced],
             self._async_update_energy,
             job_type=HassJobType.Callback,
         )
@@ -100,10 +88,13 @@ class ZendureCoordinator(DataUpdateCoordinator):
         # Initialise your api here
         self.api = API(host=self.host, user=self.user, pwd=self.pwd)
 
-    @ha_callback
-    def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
-        """Handle linked battery charging sensor state change listener callback."""
+    @callback
+    async def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
+        """Publish state change to MQTT."""
         _LOGGER.debug('Energy usage callback')
+        if (new_state := event.data["new_state"]) is None:
+            return
+        _LOGGER.debug('Energy usage state changed!')
 
     async def async_update_data(self):
         """Fetch data from API endpoint.
@@ -121,6 +112,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
 
             if not self.api.connected:
                 await self.hass.async_add_executor_job(self.api.connect)
+
             devices = await self.hass.async_add_executor_job(self.api.get_devices)
             self.do_callback()
         except APIAuthError as err:
