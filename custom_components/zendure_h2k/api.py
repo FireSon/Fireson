@@ -6,14 +6,19 @@ of making this Zendure code executable.
 
 from dataclasses import dataclass
 from enum import StrEnum
+import os
+import sys
 import logging
+import json
+import requests
 
 from random import choice, randrange
-
-# from .coordinator import ZendureCoordinator
-# from .sensor import ZendureSensor
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 _LOGGER = logging.getLogger(__name__)
+
+SF_API_BASE_URL = "https://app.zendure.tech"
 
 
 class DeviceType(StrEnum):
@@ -43,6 +48,7 @@ class Hyper2000:
         """Initialise."""
         self.id = id
         self.connected: bool = False
+        self.properties : dict[str, any]
         # self.sensors : dict[str, hyperSensor]
 
 
@@ -60,51 +66,111 @@ class Device:
 
 class API:
     """Class for Zendure API."""
+    def __init__(self, zen_api, username, password):
+        self.baseUrl = f'{SF_API_BASE_URL}'
+        self.zen_api = zen_api
+        self.username = username
+        self.password = password
+        self.session = None
 
-    def __init__(self, host: str, user: str, pwd: str) -> None:
-        """Initialise."""
-        self.host = host
-        self.user = user
-        self.pwd = pwd
-        self.connected: bool = False
-        self.counter: int = 0
+    def __enter__(self):
+        self.session = requests.Session()
+        retry = Retry(connect=3, backoff_factor=0.5)
+        adapter = HTTPAdapter(max_retries=retry)
+        self.session.verify = True
+        self.session.mount('http://', adapter)
+        self.session.mount('https://', adapter)
+        self.session.headers = {
+                'Content-Type':'application/json',
+                'Accept-Language': 'en-EN',
+                'appVersion': '4.3.1',
+                'User-Agent': 'Zendure/4.3.1 (iPhone; iOS 14.4.2; Scale/3.00)',
+                'Accept': '*/*',
+                'Blade-Auth': 'bearer (null)'
+            }
+        self.session.params = None
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.session.close()
+        self.session = None
+
+    def connect(self):
+        SF_AUTH_PATH = "/auth/app/token"
+        authBody = {
+                'password': self.password,
+                'account': self.username,
+                'appId': '121c83f761305d6cf7e',
+                'appType': 'iOS',
+                'grantType': 'password',
+                'tenantId': ''
+            }
+        
+        try:
+            url = f'{self.zen_api}{SF_AUTH_PATH}'
+            _LOGGER.info("Authenticating with Zendure ...")
+            response = self.session.post(url=url, json=authBody)
+            if response.ok:
+                respJson = response.json()
+                token = respJson["data"]["accessToken"]
+                _LOGGER.info('Got bearer token!')
+                self.session.headers["Blade-Auth"] = f'bearer {token}'
+                return token
+            else:
+                _LOGGER.error("Authentication failed!")
+                _LOGGER.error(response.text)
+        except Exception as e:
+            _LOGGER.exception(e)
+
+    def getHypers(self, hypers: dict[str, Hyper2000]) -> dict[str, Hyper2000]:
+        SF_DEVICELIST_PATH = "/productModule/device/queryDeviceListByConsumerId"
+        SF_DEVICEDETAILS_PATH = "/device/solarFlow/detail"
+        try:
+            url = f'{self.zen_api}{SF_DEVICELIST_PATH}'
+            _LOGGER.info("Getting device list ...")
+            response = self.session.post(url=url)
+            if response.ok:
+                respJson = response.json()
+                _LOGGER.info(json.dumps(respJson["data"], indent=2))
+                devices = respJson["data"]
+                ids = []
+                for dev in devices:
+                    if dev["productName"] == 'SolarFlow2.0':
+                        payload = {"deviceId": dev["id"]}
+                        try:
+                            url = f'{self.zen_api}{SF_DEVICEDETAILS_PATH}'
+                            _LOGGER.info(f'Getting device details for [{dev["id"]}] ...')
+                            response = self.session.post(url=url, json=payload)
+                            if response.ok:
+                                respJson = response.json()
+                                _LOGGER.info(json.dumps(respJson["data"], indent=2))
+                                device = respJson["data"]
+                                h = hypers.get(dev["id"], None)
+                                if h is None:
+                                    hypers[dev["id"]] = h = Hyper2000(dev["id"])
+                                for key, value in device.items():
+                                    h.properties[key] = value
+                                _LOGGER.info(f'Hyper2000[{dev["id"]}]: {h.properties}')
+                            else:
+                                _LOGGER.error("Fetching device details failed!")
+                                _LOGGER.error(response.text)
+                        except Exception as e:
+                            _LOGGER.exception(e)
+            else:
+                _LOGGER.error("Fetching device list failed!")
+                _LOGGER.error(response.text)
+        except Exception as e:
+            _LOGGER.exception(e)
+        return hypers
+
 
     @property
     def controller_name(self) -> str:
         """Return the name of the controller."""
-        return self.host.replace(".", "_")
-
-    def connect(self) -> bool:
-        """Connect to api."""
-        if self.user == "test" and self.pwd == "1234":
-            self.connected = True
-            return True
-        raise APIAuthError("Error connecting to api. Invalid username or password.")
-
-    def disconnect(self) -> bool:
-        """Disconnect from api."""
-        self.connected = False
-        return True
+        return self.zen_api.replace(".", "_")
 
     def get_devices(self) -> list[Device]:
         """Get devices on api."""
-        self.counter += 1
-
-        if self.counter > 5:
-            return [
-                Device(
-                    device_id=device.get("id"),
-                    device_unique_id=self.get_device_unique_id(
-                        device.get("id"), device.get("type")
-                    ),
-                    device_type=device.get("type"),
-                    name=self.get_device_name(device.get("id"), device.get("type")),
-                    state=self.get_device_value(device.get("id"), device.get("type")),
-                    isNew=False,
-                )
-                for device in DEVICES
-            ]
-
         return [
             Device(
                 device_id=device.get("id"),
@@ -114,12 +180,10 @@ class API:
                 device_type=device.get("type"),
                 name=self.get_device_name(device.get("id"), device.get("type")),
                 state=self.get_device_value(device.get("id"), device.get("type")),
-                isNew=device.get("id")==self.counter,
+                isNew=False,
             )
             for device in DEVICES
-            if device.get("id") <= self.counter
         ]
-
 
     def get_device_unique_id(self, device_id: str, device_type: DeviceType) -> str:
         """Return a unique device id."""

@@ -85,7 +85,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"Energy initalized: {self.consumed} - {self.produced}")
 
         # Initialise your api here
-        self.api = API(host=self.host, user=self.user, pwd=self.pwd)
+        self.api = API(self.host, self.user, self.pwd)
 
     @callback
     def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
@@ -103,11 +103,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         """
         try:
             if not self.hypers:
-                self.hypers =   {
-                    "123", Hyper2000("123"),
-                    "456", Hyper2000("456"),
-                    "789", Hyper2000("789"),
-                }
+                self.hypers = await self.hass.async_add_executor_job(self.api.getHypers(self.hypers))
 
             if not self.api.connected:
                 await self.hass.async_add_executor_job(self.api.connect)

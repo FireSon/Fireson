@@ -44,9 +44,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     #     your_validate_func, data[CONF_USERNAME], data[CONF_PASSWORD]
     # )
 
-    api = API(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
-        await hass.async_add_executor_job(api.connect)
+        with API(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]) as api:
+            await hass.async_add_executor_job(api.connect)
         # If you cannot connect, raise CannotConnect
         # If the authentication is wrong, raise InvalidAuth
     except APIAuthError as err:
@@ -102,9 +102,9 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema = vol.Schema(
                 {
-                    vol.Required(CONF_HOST, description={"suggested_value": "192.168.10.1"}): str,
-                    vol.Required(CONF_USERNAME, description={"suggested_value": "test"}): str,
-                    vol.Required(CONF_PASSWORD, description={"suggested_value": "1234"}): selector.TextSelector(
+                    vol.Required(CONF_HOST, description={"suggested_value": "https://app.zendure.tech/eu"}): str,
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.PASSWORD,
                         ),
@@ -150,9 +150,7 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
-                    ): str,
+                    vol.Required(CONF_USERNAME, default=config_entry.data[CONF_USERNAME]): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Required(CONF_CONSUMED, description={"suggested_value": "sensor.power_consumed"}): str,
                     vol.Required(CONF_PRODUCED, description={"suggested_value": "sensor.power_produced"}): str,
