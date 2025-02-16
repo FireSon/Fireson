@@ -14,8 +14,8 @@
       "user": {
         "data": {
           "host": "Host",
-          "password": "Password",
-          "username": "Username",
+          "username": "Zendure Username",
+          "password": "Zendure Password",
           "consumed": "Sensor for consumed energy",
           "produced": "Sensor for produced energy"
         }
