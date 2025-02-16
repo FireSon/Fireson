@@ -10,7 +10,8 @@ import os
 import sys
 import logging
 import json
-from flask import session
+import asyncio
+from requests_html import AsyncHTMLSession
 import requests
 
 from random import choice, randrange
@@ -68,8 +69,7 @@ class Device:
 
 class API:
     """Class for Zendure API."""
-    def __init__(self, hass: HomeAssistant, zen_api, username, password):
-        self.hass = hass
+    def __init__(self, zen_api, username, password):
         self.baseUrl = f'{SF_API_BASE_URL}'
         self.zen_api = zen_api
         self.username = username
@@ -77,7 +77,7 @@ class API:
         self.session = None
 
     async def connect(self):
-        self.session = requests.Session()
+        self.session = AsyncHTMLSession()
         retry = Retry(connect=3, backoff_factor=0.5)
         adapter = HTTPAdapter(max_retries=retry)
         self.session.verify = True
@@ -107,7 +107,7 @@ class API:
             url = f'{self.zen_api}{SF_AUTH_PATH}'
             _LOGGER.info("Authenticating with Zendure ...")
 
-            response = self.session.post(url=url, json=authBody)
+            response = await self.session.post(url=url, json=authBody)
             if response.ok:
                 respJson = response.json()
                 token = respJson["data"]["accessToken"]
@@ -133,7 +133,7 @@ class API:
             url = f'{self.zen_api}{SF_DEVICELIST_PATH}'
             _LOGGER.info("Getting device list ...")
           
-            response = self.session.post(url=url)
+            response = await self.session.post(url=url)
             if response.ok:
                 respJson = response.json()
                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
@@ -145,7 +145,7 @@ class API:
                         try:
                             url = f'{self.zen_api}{SF_DEVICEDETAILS_PATH}'
                             _LOGGER.info(f'Getting device details for [{dev["id"]}] ...')
-                            response = self.session.post(url=url, json=payload)
+                            response = await self.session.post(url=url, json=payload)
                             if response.ok:
                                 respJson = response.json()
                                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
