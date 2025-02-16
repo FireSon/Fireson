@@ -78,26 +78,19 @@ class API:
         self.session = None
 
     async def connect(self):
-        self.session = async_get_clientsession(self.hass, headers = {
+        self.session = async_get_clientsession(self.hass)
+        #retry = Retry(connect=3, backoff_factor=0.5)
+        #adapter = HTTPAdapter(max_retries=retry)
+        # self.session.mount('http://', adapter)
+        # self.session.mount('https://', adapter)
+        self.headers = {
                 'Content-Type':'application/json',
                 'Accept-Language': 'en-EN',
                 'appVersion': '4.3.1',
                 'User-Agent': 'Zendure/4.3.1 (iPhone; iOS 14.4.2; Scale/3.00)',
                 'Accept': '*/*',
                 'Blade-Auth': 'bearer (null)'
-            })
-        #retry = Retry(connect=3, backoff_factor=0.5)
-        #adapter = HTTPAdapter(max_retries=retry)
-        # self.session.mount('http://', adapter)
-        # self.session.mount('https://', adapter)
-        # self.session.headers = {
-        #         'Content-Type':'application/json',
-        #         'Accept-Language': 'en-EN',
-        #         'appVersion': '4.3.1',
-        #         'User-Agent': 'Zendure/4.3.1 (iPhone; iOS 14.4.2; Scale/3.00)',
-        #         'Accept': '*/*',
-        #         'Blade-Auth': 'bearer (null)'
-        #     }
+            }
 
         SF_AUTH_PATH = "/auth/app/token"
         authBody = {
@@ -113,12 +106,12 @@ class API:
             url = f'{self.zen_api}{SF_AUTH_PATH}'
             _LOGGER.info("Authenticating with Zendure ...")
 
-            response = await self.session.post(url=url, json=authBody)
+            response = await self.session.post(url=url, json=authBody, headers=self.headers)
             if response.ok:
                 respJson = response.json()
                 token = respJson["data"]["accessToken"]
                 _LOGGER.info('Got bearer token!')
-                self.session.headers["Blade-Auth"] = f'bearer {token}'
+                self.headers["Blade-Auth"] = f'bearer {token}'
                 return token
             else:
                 _LOGGER.error("Authentication failed!")
@@ -139,7 +132,7 @@ class API:
             url = f'{self.zen_api}{SF_DEVICELIST_PATH}'
             _LOGGER.info("Getting device list ...")
           
-            response = await self.session.post(url=url)
+            response = await self.session.post(url=url, headers=self.headers)
             if response.ok:
                 respJson = response.json()
                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
@@ -151,7 +144,7 @@ class API:
                         try:
                             url = f'{self.zen_api}{SF_DEVICEDETAILS_PATH}'
                             _LOGGER.info(f'Getting device details for [{dev["id"]}] ...')
-                            response = await self.session.post(url=url, json=payload)
+                            response = await self.session.post(url=url, json=payload, headers=self.headers)
                             if response.ok:
                                 respJson = response.json()
                                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
