@@ -83,18 +83,18 @@ class ZendureCoordinator(DataUpdateCoordinator):
         self.produced: str = config_entry.data[CONF_PRODUCED]
         _LOGGER.debug(f"Energy sensors: {self.consumed} - {self.produced}")
 
-        # async_track_state_change_event(
-        #     self._hass,
-        #     self.consumed,
-        #     self._async_update_energy,
-        #     job_type=HassJobType.Callback,
-        # )
-        # async_track_state_change_event(
-        #     self._hass,
-        #     self.produced,
-        #     self._async_update_energy,
-        #     job_type=HassJobType.Callback,
-        # )
+        async_track_state_change_event(
+            self._hass,
+            self.consumed,
+            self._async_update_energy,
+            job_type=HassJobType.Callback,
+        )
+        async_track_state_change_event(
+            self._hass,
+            self.produced,
+            self._async_update_energy,
+            job_type=HassJobType.Callback,
+        )
         _LOGGER.debug(f"Energy initalized: {self.consumed} - {self.produced}")
 
         # Initialise your api here
