@@ -85,7 +85,13 @@ class ZendureCoordinator(DataUpdateCoordinator):
 
         async_track_state_change_event(
             self._hass,
-            [self.consumed, self.produced],
+            self.consumed
+            self._async_update_energy,
+            job_type=HassJobType.Callback,
+        )
+        async_track_state_change_event(
+            self._hass,
+            self.produced,
             self._async_update_energy,
             job_type=HassJobType.Callback,
         )
