@@ -139,7 +139,7 @@ class API:
                 respJson = await response.json()
                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
                 devices = respJson["data"]
-                ids = []
+                _LOGGER.debug(devices)
                 for dev in devices:
                     if dev["productName"] == 'SolarFlow2.0':
                         payload = {"deviceId": dev["id"]}
