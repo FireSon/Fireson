@@ -45,7 +45,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         """Initialize coordinator."""
 
         # Set variables from values entered in config flow setup
-        self._hass = hass
+        self.hass = hass
         self.host = config_entry.data[CONF_HOST]
         self.user = config_entry.data[CONF_USERNAME]
         self.pwd = config_entry.data[CONF_PASSWORD]
