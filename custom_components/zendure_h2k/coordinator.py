@@ -79,7 +79,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
 
         async_track_state_change_event(
             self.hass,
-            [self.consumed, self.produced, "sensor.google_photos_foto_s_jan_filename"],
+            ["sensor.google_photos_foto_s_jan_filename"],
             self._async_update_energy,
             job_type=HassJobType.Callback,
         )

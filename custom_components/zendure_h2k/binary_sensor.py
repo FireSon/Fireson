@@ -57,7 +57,6 @@ class ZendureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self.device = self.coordinator.get_device_by_id(
             self.device.device_type, self.device_id
         )
-        _LOGGER.debug("Device: %s", self.device)
         self.async_write_ha_state()
 
     @property
