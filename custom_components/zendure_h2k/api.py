@@ -10,6 +10,7 @@ import os
 import sys
 import logging
 import json
+from flask import session
 import requests
 
 from random import choice, randrange
@@ -124,6 +125,8 @@ class API:
         SF_DEVICELIST_PATH = "/productModule/device/queryDeviceListByConsumerId"
         SF_DEVICEDETAILS_PATH = "/device/solarFlow/detail"
         try:
+            if session is None:
+                self.connect()
             url = f'{self.zen_api}{SF_DEVICELIST_PATH}'
             _LOGGER.info("Getting device list ...")
             response = self.session.post(url=url)
