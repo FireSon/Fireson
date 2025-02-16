@@ -14,6 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .api import API, APIAuthError, Device, DeviceType, Hyper2000
 from .const import (
@@ -44,10 +45,27 @@ class ZendureCoordinator(DataUpdateCoordinator):
         """Initialize coordinator."""
 
         # Set variables from values entered in config flow setup
+        self._hass = hass
         self.host = config_entry.data[CONF_HOST]
         self.user = config_entry.data[CONF_USERNAME]
         self.pwd = config_entry.data[CONF_PASSWORD]
         self._hyper_callbacks = []
+
+        # Set variables from values entered in config flow setup
+        self.consumed = config_entry.data[CONF_CONSUMED]
+        self.produced = config_entry.data[CONF_PRODUCED]
+
+        async_track_state_change_event(
+            self.hass,
+            self.consumed,
+            self._async_update_energy,
+        )
+
+        async_track_state_change_event(
+            self.hass,
+            self.produced,
+            self._async_update_energy,
+        )
 
         # set variables from options.  You need a default here incase options have not been set
         self.poll_interval = config_entry.options.get(
@@ -65,6 +83,10 @@ class ZendureCoordinator(DataUpdateCoordinator):
 
         # Initialise your api here
         self.api = API(host=self.host, user=self.user, pwd=self.pwd)
+
+    async def _async_update_energy(self, event):  # pylint: disable=unused-argument
+        """Handle energy usage changes."""
+        _LOGGER.debug('Energy usage callback')
 
     async def async_update_data(self):
         """Fetch data from API endpoint.

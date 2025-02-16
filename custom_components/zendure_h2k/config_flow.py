@@ -154,6 +154,8 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_CONSUMED, description={"suggested_value": "sensor.power_consumed"}): str,
+                    vol.Required(CONF_PRODUCED, description={"suggested_value": "sensor.power_produced"}): str,
                 }
             ),
             errors=errors,

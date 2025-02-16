@@ -13,7 +13,7 @@
     "step": {
       "user": {
         "data": {
-          "host": "Host",
+          "host": "Zendure Host",
           "username": "Zendure Username",
           "password": "Zendure Password",
           "consumed": "Sensor for consumed energy",
@@ -22,9 +22,11 @@
       },
       "reconfigure": {
         "data": {
-          "host": "Host",
-          "password": "Password",
-          "username": "Username"
+          "host": "Zendure Host",
+          "username": "Zendure Username",
+          "password": "Zendure Password",
+          "consumed": "Sensor for consumed energy",
+          "produced": "Sensor for produced energy"
         }
       }
     }
