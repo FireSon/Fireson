@@ -107,7 +107,7 @@ class API:
             url = f'{self.zen_api}{SF_AUTH_PATH}'
             _LOGGER.info("Authenticating with Zendure ...")
 
-            response = await self.hass.async_add_executor_job(self.session.post(url=url, json=authBody))
+            response = self.session.post(url=url, json=authBody)
             if response.ok:
                 respJson = response.json()
                 token = respJson["data"]["accessToken"]
@@ -133,7 +133,7 @@ class API:
             url = f'{self.zen_api}{SF_DEVICELIST_PATH}'
             _LOGGER.info("Getting device list ...")
           
-            response = await self.hass.async_add_executor_job(self.session.post(url=url))
+            response = self.session.post(url=url)
             if response.ok:
                 respJson = response.json()
                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
@@ -145,7 +145,7 @@ class API:
                         try:
                             url = f'{self.zen_api}{SF_DEVICEDETAILS_PATH}'
                             _LOGGER.info(f'Getting device details for [{dev["id"]}] ...')
-                            response = await self.hass.async_add_executor_job(self.session.post(url=url, json=payload))
+                            response = self.session.post(url=url, json=payload)
                             if response.ok:
                                 respJson = response.json()
                                 _LOGGER.info(json.dumps(respJson["data"], indent=2))

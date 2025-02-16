@@ -103,10 +103,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         """
         try:
             if not self.hypers:
-                self.hypers = await self.hass.async_add_executor_job(self.api.getHypers(self.hypers))
-
-            if not self.api.connected:
-                await self.hass.async_add_executor_job(self.api.connect)
+                self.hypers = await self.api.getHypers(self.hypers)
 
             devices = await self.hass.async_add_executor_job(self.api.get_devices)
             self.do_callback()
