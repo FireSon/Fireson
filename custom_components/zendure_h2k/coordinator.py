@@ -18,6 +18,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.core import (
     Event,
     EventStateChangedData,
+    HassJobType,
     State,
     callback as ha_callback,
 )
@@ -86,6 +87,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
             self._hass,
             [self.consumed, self.produced],
             self._async_update_energy,
+            job_type=HassJobType.Callback,
         )
 
         # Initialise your api here
