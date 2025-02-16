@@ -78,10 +78,9 @@ class ZendureCoordinator(DataUpdateCoordinator):
         _LOGGER.debug(f"Energy sensors: {self.consumed} - {self.produced}")
 
         async_track_state_change_event(
-            self.hass,
+            self._hass,
             ["sensor.google_photos_foto_s_jan_filename"],
-            self._async_update_energy,
-            job_type=HassJobType.Callback,
+            self._async_update_energy
         )
         _LOGGER.debug(f"Energy initalized: {self.consumed} - {self.produced}")
 
