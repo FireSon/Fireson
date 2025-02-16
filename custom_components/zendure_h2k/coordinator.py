@@ -52,8 +52,9 @@ class ZendureCoordinator(DataUpdateCoordinator):
         self._hyper_callbacks = []
 
         # Set variables from values entered in config flow setup
-        self.consumed = config_entry.data[CONF_CONSUMED]
-        self.produced = config_entry.data[CONF_PRODUCED]
+        self.consumed: str = config_entry.data[CONF_CONSUMED]
+        self.produced: str = config_entry.data[CONF_PRODUCED]
+        _LOGGER.debug(f"Energy: {self.consumed} - {self.produced}")
 
         async_track_state_change_event(
             self._hass,
@@ -105,7 +106,6 @@ class ZendureCoordinator(DataUpdateCoordinator):
             if not self.api.connected:
                 await self.hass.async_add_executor_job(self.api.connect)
             devices = await self.hass.async_add_executor_job(self.api.get_devices)
-            _LOGGER.debug('checking callback')
             self.do_callback()
         except APIAuthError as err:
             _LOGGER.error(err)
@@ -129,7 +129,6 @@ class ZendureCoordinator(DataUpdateCoordinator):
         """ Execute callbacks registered for specified callback type """
         for callback in self._hyper_callbacks:
             try:
-                _LOGGER.debug('execute callback')
                 if callback_arg is None:
                     callback()
                 else:
