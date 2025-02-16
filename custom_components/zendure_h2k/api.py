@@ -16,6 +16,7 @@ import requests
 from random import choice, randrange
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,14 +68,15 @@ class Device:
 
 class API:
     """Class for Zendure API."""
-    def __init__(self, zen_api, username, password):
+    def __init__(self, hass: HomeAssistant, zen_api, username, password):
+        self.hass = hass
         self.baseUrl = f'{SF_API_BASE_URL}'
         self.zen_api = zen_api
         self.username = username
         self.password = password
         self.session = None
 
-    def connect(self):
+    async def connect(self):
         self.session = requests.Session()
         retry = Retry(connect=3, backoff_factor=0.5)
         adapter = HTTPAdapter(max_retries=retry)
@@ -104,7 +106,8 @@ class API:
         try:
             url = f'{self.zen_api}{SF_AUTH_PATH}'
             _LOGGER.info("Authenticating with Zendure ...")
-            response = self.session.post(url=url, json=authBody)
+
+            response = await self.hass.async_add_executor_job(self.session.post(url=url, json=authBody))
             if response.ok:
                 respJson = response.json()
                 token = respJson["data"]["accessToken"]
@@ -121,15 +124,16 @@ class API:
         self.session.close()
         self.session = None
 
-    def getHypers(self, hypers: dict[str, Hyper2000]) -> dict[str, Hyper2000]:
+    async def getHypers(self, hypers: dict[str, Hyper2000]) -> dict[str, Hyper2000]:
         SF_DEVICELIST_PATH = "/productModule/device/queryDeviceListByConsumerId"
         SF_DEVICEDETAILS_PATH = "/device/solarFlow/detail"
         try:
-            if session is None:
-                self.connect()
+            if self.session is None:
+                await self.connect()
             url = f'{self.zen_api}{SF_DEVICELIST_PATH}'
             _LOGGER.info("Getting device list ...")
-            response = self.session.post(url=url)
+          
+            response = await self.hass.async_add_executor_job(self.session.post(url=url))
             if response.ok:
                 respJson = response.json()
                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
@@ -141,7 +145,7 @@ class API:
                         try:
                             url = f'{self.zen_api}{SF_DEVICEDETAILS_PATH}'
                             _LOGGER.info(f'Getting device details for [{dev["id"]}] ...')
-                            response = self.session.post(url=url, json=payload)
+                            response = await self.hass.async_add_executor_job(self.session.post(url=url, json=payload))
                             if response.ok:
                                 respJson = response.json()
                                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
