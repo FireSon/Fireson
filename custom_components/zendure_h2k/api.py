@@ -73,7 +73,7 @@ class API:
         self.password = password
         self.session = None
 
-    def __enter__(self):
+    def connect(self):
         self.session = requests.Session()
         retry = Retry(connect=3, backoff_factor=0.5)
         adapter = HTTPAdapter(max_retries=retry)
@@ -89,13 +89,7 @@ class API:
                 'Blade-Auth': 'bearer (null)'
             }
         self.session.params = None
-        return self
 
-    def __exit__(self, type, value, traceback):
-        self.session.close()
-        self.session = None
-
-    def connect(self):
         SF_AUTH_PATH = "/auth/app/token"
         authBody = {
                 'password': self.password,
@@ -121,6 +115,10 @@ class API:
                 _LOGGER.error(response.text)
         except Exception as e:
             _LOGGER.exception(e)
+
+    def disconnect(self):
+        self.session.close()
+        self.session = None
 
     def getHypers(self, hypers: dict[str, Hyper2000]) -> dict[str, Hyper2000]:
         SF_DEVICELIST_PATH = "/productModule/device/queryDeviceListByConsumerId"
