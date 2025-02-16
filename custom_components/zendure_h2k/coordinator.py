@@ -45,7 +45,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         """Initialize coordinator."""
 
         # Set variables from values entered in config flow setup
-        self.hass = hass
+        self._hass = hass
         self.host = config_entry.data[CONF_HOST]
         self.user = config_entry.data[CONF_USERNAME]
         self.pwd = config_entry.data[CONF_PASSWORD]
@@ -56,13 +56,13 @@ class ZendureCoordinator(DataUpdateCoordinator):
         self.produced = config_entry.data[CONF_PRODUCED]
 
         async_track_state_change_event(
-            self.hass,
+            self._hass,
             self.consumed,
             self._async_update_energy,
         )
 
         async_track_state_change_event(
-            self.hass,
+            self._hass,
             self.produced,
             self._async_update_energy,
         )
