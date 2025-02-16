@@ -57,17 +57,6 @@ class ZendureCoordinator(DataUpdateCoordinator):
         self.pwd = config_entry.data[CONF_PASSWORD]
         self._hyper_callbacks = []
 
-        # Set variables from values entered in config flow setup
-        self.consumed: str = config_entry.data[CONF_CONSUMED]
-        self.produced: str = config_entry.data[CONF_PRODUCED]
-        _LOGGER.debug(f"Energy sensors: {self.consumed} - {self.produced}")
-
-        async_track_state_change_event(
-            self._hass,
-            [self.consumed, self.produced],
-            self._async_update_energy,
-        )
-
         # async_track_state_change_event(
         #     self._hass,
         #     self.produced,
@@ -86,6 +75,17 @@ class ZendureCoordinator(DataUpdateCoordinator):
             name=f"{DOMAIN} ({config_entry.unique_id})",
             update_method=self.async_update_data,
             update_interval=timedelta(seconds=self.poll_interval),
+        )
+
+        # Set variables from values entered in config flow setup
+        self.consumed: str = config_entry.data[CONF_CONSUMED]
+        self.produced: str = config_entry.data[CONF_PRODUCED]
+        _LOGGER.debug(f"Energy sensors: {self.consumed} - {self.produced}")
+
+        async_track_state_change_event(
+            self._hass,
+            [self.consumed, self.produced],
+            self._async_update_energy,
         )
 
         # Initialise your api here
