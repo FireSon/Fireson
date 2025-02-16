@@ -21,7 +21,6 @@ from .const import (
     CONF_CONSUMED,
     CONF_PRODUCED,
 )
-from .sensor import ZendureSensor
 
 _LOGGER = logging.getLogger(__name__)
 
