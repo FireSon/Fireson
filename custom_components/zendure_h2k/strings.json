@@ -15,7 +15,9 @@
         "data": {
           "host": "Host",
           "password": "Password",
-          "username": "Username"
+          "username": "Username",
+          "consumed": "Sensor for consumed energy",
+          "produced": "Sensor for produced energy"
         }
       },
       "reconfigure": {

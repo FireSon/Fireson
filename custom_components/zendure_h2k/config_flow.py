@@ -25,7 +25,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .api import API, APIAuthError, APIConnectionError
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL, CONF_CONSUMED, CONF_PRODUCED
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,11 +105,13 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST, description={"suggested_value": "192.168.10.1"}): str,
                     vol.Required(CONF_USERNAME, description={"suggested_value": "test"}): str,
                     vol.Required(CONF_MODEL, description={"suggested_value": "test"}): str,
-                    vol.Required(CONF_PASSWORD, description={"suggested_value": "12341"}): selector.TextSelector(
+                    vol.Required(CONF_PASSWORD, description={"suggested_value": "1234"}): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.PASSWORD,
                         ),
                     ),
+                    vol.Required(CONF_CONSUMED, description={"suggested_value": "sensor.power_consumed"}): str,
+                    vol.Required(CONF_PRODUCED, description={"suggested_value": "sensor.power_produced"}): str,
                 }
             ), errors=errors
         )
@@ -152,6 +155,8 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_CONSUMED, description={"suggested_value": "sensor.power_consumed"}): str,
+                    vol.Required(CONF_PRODUCED, description={"suggested_value": "sensor.power_produced"}): str,
                 }
             ),
             errors=errors,

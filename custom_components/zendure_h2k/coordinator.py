@@ -16,7 +16,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import API, APIAuthError, Device, DeviceType, Hyper2000
-from .const import DEFAULT_SCAN_INTERVAL
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    CONF_CONSUMED,
+    CONF_PRODUCED,
+)
 from .sensor import ZendureSensor
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,10 +60,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{DOMAIN} ({config_entry.unique_id})",
-            # Method to call on every update interval.
             update_method=self.async_update_data,
-            # Polling interval. Will only be polled if there are subscribers.
-            # Using config option here but you can just use a value.
             update_interval=timedelta(seconds=self.poll_interval),
         )
 
