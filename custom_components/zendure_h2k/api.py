@@ -78,19 +78,26 @@ class API:
         self.session = None
 
     async def connect(self):
-        self.session = async_get_clientsession(self.hass)
-        retry = Retry(connect=3, backoff_factor=0.5)
-        adapter = HTTPAdapter(max_retries=retry)
-        # self.session.mount('http://', adapter)
-        # self.session.mount('https://', adapter)
-        self.session.headers = {
+        self.session = async_get_clientsession(self.hass, headers = {
                 'Content-Type':'application/json',
                 'Accept-Language': 'en-EN',
                 'appVersion': '4.3.1',
                 'User-Agent': 'Zendure/4.3.1 (iPhone; iOS 14.4.2; Scale/3.00)',
                 'Accept': '*/*',
                 'Blade-Auth': 'bearer (null)'
-            }
+            })
+        #retry = Retry(connect=3, backoff_factor=0.5)
+        #adapter = HTTPAdapter(max_retries=retry)
+        # self.session.mount('http://', adapter)
+        # self.session.mount('https://', adapter)
+        # self.session.headers = {
+        #         'Content-Type':'application/json',
+        #         'Accept-Language': 'en-EN',
+        #         'appVersion': '4.3.1',
+        #         'User-Agent': 'Zendure/4.3.1 (iPhone; iOS 14.4.2; Scale/3.00)',
+        #         'Accept': '*/*',
+        #         'Blade-Auth': 'bearer (null)'
+        #     }
 
         SF_AUTH_PATH = "/auth/app/token"
         authBody = {
