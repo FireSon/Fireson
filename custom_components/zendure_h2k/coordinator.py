@@ -89,6 +89,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
             self._async_update_energy,
             job_type=HassJobType.Callback,
         )
+        _LOGGER.debug(f"Energy initalized: {self.consumed} - {self.produced}")
 
         # Initialise your api here
         self.api = API(host=self.host, user=self.user, pwd=self.pwd)
