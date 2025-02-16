@@ -77,7 +77,7 @@ class API:
         self.password = password
         self.session = None
 
-    async def connect(self):
+    async def connect(self) -> bool:
         self.session = async_get_clientsession(self.hass)
         #retry = Retry(connect=3, backoff_factor=0.5)
         #adapter = HTTPAdapter(max_retries=retry)
@@ -108,16 +108,18 @@ class API:
 
             response = await self.session.post(url=url, json=authBody, headers=self.headers)
             if response.ok:
-                respJson = response.json()
+                respJson = await response.json()
                 token = respJson["data"]["accessToken"]
                 _LOGGER.info('Got bearer token!')
                 self.headers["Blade-Auth"] = f'bearer {token}'
-                return token
             else:
                 _LOGGER.error("Authentication failed!")
                 _LOGGER.error(response.text)
+                return False
         except Exception as e:
             _LOGGER.exception(e)
+            return False
+        return True
 
     def disconnect(self):
         self.session.close()
@@ -134,7 +136,7 @@ class API:
           
             response = await self.session.post(url=url, headers=self.headers)
             if response.ok:
-                respJson = response.json()
+                respJson = await response.json()
                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
                 devices = respJson["data"]
                 ids = []
@@ -146,7 +148,7 @@ class API:
                             _LOGGER.info(f'Getting device details for [{dev["id"]}] ...')
                             response = await self.session.post(url=url, json=payload, headers=self.headers)
                             if response.ok:
-                                respJson = response.json()
+                                respJson = await response.json()
                                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
                                 device = respJson["data"]
                                 h = hypers.get(dev["id"], None)
