@@ -148,6 +148,7 @@ class API:
                                 h = Hyper2000(device)
                                 hypers[dev["id"]] = h
                                 _LOGGER.info(f'Hyper2000[{dev["id"]}]: {h}')
+                                await h.async_connect()
                             else:
                                 _LOGGER.error("Fetching device details failed!")
                                 _LOGGER.error(response.text)
