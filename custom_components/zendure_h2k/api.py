@@ -146,10 +146,8 @@ class API:
                                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
                                 device = respJson["data"]
                                 h = Hyper2000(device)
-                                for key, value in device.items():
-                                    h.properties[key] = value
                                 hypers[dev["id"]] = h
-                                _LOGGER.info(f'Hyper2000[{dev["id"]}]: {h.properties}')
+                                _LOGGER.info(f'Hyper2000[{dev["id"]}]: {h}')
                             else:
                                 _LOGGER.error("Fetching device details failed!")
                                 _LOGGER.error(response.text)
