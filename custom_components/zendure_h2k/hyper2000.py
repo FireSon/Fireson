@@ -8,25 +8,24 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Hyper2000:
-    def __init__(self, h_id: str, h_prod: str, device: dict) -> None:
+    def __init__(self, h_id, h_prod, device: dict) -> None:
         """Initialise."""
-        self.id = h_id
+        self.hid = h_id
         self.prodkey = h_prod 
         self.properties : dict[str, any] = {}
         for key, value in device.items():
             self.properties[key] = value
-        _LOGGER.log(f"Created {self.id} {self.prodkey}")
         self.connected: bool = False
         self._client: mqtt.Client = None
         self._lock = asyncio.Lock()
 
     async def async_connect(self):
-        _LOGGER.log(f"Connecting {self.id}")
+        _LOGGER.log(f"Connecting {self.hid}")
 
         def setup_connection():
-            client = mqtt.Client(f"HA-{self.id}")
-            pwd = hashlib.md5(self.id.encode()).hexdigest().upper()[8:24]
-            client.username_pw_set(username=str(self.id), password=str(pwd))
+            client = mqtt.Client(f"HA-{self.hid}")
+            pwd = hashlib.md5(self.hid.encode()).hexdigest().upper()[8:24]
+            client.username_pw_set(username=str(self.hid), password=str(pwd))
 
             state = client.connect("mqtteu.zen-iot.com")
             client.loop()
@@ -38,19 +37,19 @@ class Hyper2000:
             self.connected = client.is_connected()
             self._client = client
 
-            topic = f"/{self.prodkey}/{self.id}/properties/report"
+            topic = f"/{self.prodkey}/{self.hid}/properties/report"
             client.subscribe(topic)
-            _LOGGER.log(f"subscribed {self.id} {topic}")
+            _LOGGER.log(f"subscribed {self.hid} {topic}")
 
-            topic = f"/{self.prodkey}/{self.id}/log"
+            topic = f"/{self.prodkey}/{self.hid}/log"
             client.subscribe(topic)
-            _LOGGER.log(f"subscribed {self.id} {topic}")
+            _LOGGER.log(f"subscribed {self.hid} {topic}")
 
-            topic = f"iot/{self.prodkey}/{self.id}/properties/write"
+            topic = f"iot/{self.prodkey}/{self.hid}/properties/write"
             client.subscribe(topic)
-            _LOGGER.log(f"subscribed {self.id} {topic}")
+            _LOGGER.log(f"subscribed {self.hid} {topic}")
 
-            _LOGGER.log(f"ready {self.id}")
+            _LOGGER.log(f"ready {self.hid}")
             return state
 
         setup_connection()
