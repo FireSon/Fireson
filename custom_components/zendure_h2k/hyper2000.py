@@ -20,7 +20,7 @@ class Hyper2000:
         self._lock = asyncio.Lock()
 
     async def async_connect(self):
-        _LOGGER.debug(f"Connecting to {self._host}:{self._port}")
+        _LOGGER.debug(f"Connecting {self.id}")
 
         def setup_connection():
             client = mqtt.Client(f"HA-{self._topic}")
