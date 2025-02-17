@@ -18,6 +18,7 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from .hyper2000 import Hyper2000
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,15 +45,6 @@ DEVICES = [
     {"id": 5, "type": DeviceType.TEMP_SENSOR},
     {"id": 5, "type": DeviceType.DOOR_SENSOR},
 ]
-
-
-class Hyper2000:
-    def __init__(self, id: str) -> None:
-        """Initialise."""
-        self.id = id
-        self.connected: bool = False
-        self.properties : dict[str, any]
-        # self.sensors : dict[str, hyperSensor]
 
 
 @dataclass
@@ -140,9 +132,10 @@ class API:
                 respJson = await response.json()
                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
                 devices = respJson["data"]
-                _LOGGER.debug(devices)
+                _LOGGER.debug(f'devices: {devices}')
                 for dev in devices:
-                    if dev["productName"] == 'ja72U0ha' or dev["productName"] == 'gDa3tb':
+                    _LOGGER.debug(f'prodname: {dev["productName"]}')
+                    if dev["productName"] == 'Hyper 2000':
                         payload = {"deviceId": dev["id"]}
                         try:
                             url = f'{self.zen_api}{SF_DEVICEDETAILS_PATH}'
@@ -167,6 +160,7 @@ class API:
                 _LOGGER.error(response.text)
         except Exception as e:
             _LOGGER.exception(e)
+        _LOGGER.debug(f'get hypers: {len(hypers)}')
         return hypers
 
 
