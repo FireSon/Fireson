@@ -11,7 +11,7 @@ class Hyper2000:
     def __init__(self, id: str, prod: str, device: dict) -> None:
         """Initialise."""
         self.id = id
-        self.prodkey = prod
+        self.prodkey = prod 
         self.properties : dict[str, any] = {}
         for key, value in device.items():
             self.properties[key] = value
