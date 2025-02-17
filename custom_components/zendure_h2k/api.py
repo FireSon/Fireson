@@ -165,11 +165,6 @@ class API:
                 _LOGGER.error(response.text)
         except Exception as e:
             _LOGGER.exception(e)
-        _LOGGER.debug(f'get hypers: {len(hypers)}')
-
-        for h in hypers:
-            _LOGGER.info(f'Hyper2000: {h.id}')
-            await h.async_connect()
 
         return hypers
 
