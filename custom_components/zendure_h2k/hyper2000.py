@@ -20,7 +20,7 @@ class Hyper2000:
         self._lock = asyncio.Lock()
 
     async def async_connect(self):
-        _LOGGER.debug(f"Connecting {self.id}")
+        _LOGGER.log(f"Connecting {self.id}")
 
         def setup_connection():
             client = mqtt.Client(f"HA-{self.id}")
@@ -37,12 +37,19 @@ class Hyper2000:
             self.connected = client.is_connected()
             self._client = client
 
-            _LOGGER.debug(f"subscribed {self.id}")
-            client.subscribe(f"/{self.prodkey}/{self.id}/properties/report")
-            client.subscribe(f"/{self.prodkey}/{self.id}/log")
-            client.subscribe(f"iot/{self.prodkey}/{self.id}/properties/write")
+            topic = f"/{self.prodkey}/{self.id}/properties/report"
+            client.subscribe(topic)
+            _LOGGER.log(f"subscribed {self.id} {topic}")
 
-            _LOGGER.debug(f"ready {self.id}")
+            topic = f"/{self.prodkey}/{self.id}/log"
+            client.subscribe(topic)
+            _LOGGER.log(f"subscribed {self.id} {topic}")
+
+            topic = f"iot/{self.prodkey}/{self.id}/properties/write"
+            client.subscribe(topic)
+            _LOGGER.log(f"subscribed {self.id} {topic}")
+
+            _LOGGER.log(f"ready {self.id}")
             return state
 
         setup_connection()
@@ -52,16 +59,16 @@ class Hyper2000:
     def onMessage(self, _client, userdata, msg) -> dict:
         payload = json.loads(msg.payload.decode())
         self._payload = payload.copy()
-        _LOGGER.debug(f"Publishing: {self._payload}")
+        _LOGGER.log(f"Publishing: {self._payload}")
 
     def onConnect(self, _client, userdata, flags, rc):
-        _LOGGER.debug(f"Has been connected successfully")
+        _LOGGER.log(f"Has been connected successfully")
 
     def onDisconnect(self, _client, userdata, rc):
         self.disconnect()
 
     def disconnect(self):
-        _LOGGER.debug(f"Disconnecting from {self._host}:{self._port} and clean subs")
+        _LOGGER.log(f"Disconnecting from {self._host}:{self._port} and clean subs")
         self._client.unsubscribe(self._topic)
         self._client.disconnect()
         self._client.loop_stop()
@@ -73,7 +80,7 @@ class Hyper2000:
     async def publish(self, instance, msg: dict, wait=False) -> bool:
         async with self._lock:
             if not self.is_connected:
-                return _LOGGER.debug(f"publish fails {msg}, broker isn't connected.")
+                return _LOGGER.log(f"publish fails {msg}, broker isn't connected.")
             self._payload = None
 
             # Change selected index.
@@ -85,7 +92,7 @@ class Hyper2000:
                         break
 
             # We will wait for any message for the next 3 seconds else we will return
-            _LOGGER.debug(f"Publishing: {self.dumps_payload(msg)}")
+            _LOGGER.log(f"Publishing: {self.dumps_payload(msg)}")
             task = self._loop.create_task(publish_and_wait())
             if wait:
                 await asyncio.wait_for(task, 5)
