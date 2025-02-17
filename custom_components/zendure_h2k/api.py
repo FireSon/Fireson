@@ -145,7 +145,7 @@ class API:
                                 respJson = await response.json()
                                 device = respJson["data"]
                                 _LOGGER.info(json.dumps(device, indent=2))
-                                hypers[dev["id"]] = Hyper2000(device.items())
+                                hypers[dev["id"]] = Hyper2000(device)
                             else:
                                 _LOGGER.error("Fetching device details failed!")
                                 _LOGGER.error(response.text)
