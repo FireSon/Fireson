@@ -125,9 +125,10 @@ class API:
         self.session.close()
         self.session = None
 
-    async def getHypers(self, hypers: dict[str, Hyper2000]) -> dict[str, Hyper2000]:
+    async def getHypers(self) -> dict[str, Hyper2000]:
         SF_DEVICELIST_PATH = "/productModule/device/queryDeviceListByConsumerId"
         SF_DEVICEDETAILS_PATH = "/device/solarFlow/detail"
+        hypers : dict[str, Hyper2000] = {}
         try:
             if self.session is None:
                 await self.connect()
@@ -151,11 +152,10 @@ class API:
                                 respJson = await response.json()
                                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
                                 device = respJson["data"]
-                                h = hypers.get(dev["id"], None)
-                                if h is None:
-                                    hypers[dev["id"]] = h = Hyper2000(dev["id"])
+                                h = Hyper2000(dev["id"])
                                 for key, value in device.items():
                                     h.properties[key] = value
+                                hypers[dev["id"]] = h
                                 _LOGGER.info(f'Hyper2000[{dev["id"]}]: {h.properties}')
                             else:
                                 _LOGGER.error("Fetching device details failed!")

@@ -99,7 +99,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         """Check interfaces"""
         try:
             if not self.hypers:
-                self.hypers = await self.api.getHypers(self.hypers)
+                self.hypers = await self.api.getHypers()
 
             devices = await self.hass.async_add_executor_job(self.api.get_devices)
             self.do_callback()
