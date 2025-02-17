@@ -145,10 +145,7 @@ class API:
                                 respJson = await response.json()
                                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
                                 device = respJson["data"]
-                                h = Hyper2000(device)
-                                hypers[dev["id"]] = h
-                                _LOGGER.info(f'Hyper2000[{dev["id"]}]: {h.id}')
-                                await h.async_connect()
+                                hypers[dev["id"]] = Hyper2000(device)
                             else:
                                 _LOGGER.error("Fetching device details failed!")
                                 _LOGGER.error(response.text)
@@ -160,6 +157,11 @@ class API:
         except Exception as e:
             _LOGGER.exception(e)
         _LOGGER.debug(f'get hypers: {len(hypers)}')
+
+        for h in hypers:
+            _LOGGER.info(f'Hyper2000: {h.id}')
+            await h.async_connect()
+
         return hypers
 
 

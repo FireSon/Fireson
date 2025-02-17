@@ -15,6 +15,7 @@ class Hyper2000:
         self.properties : dict[str, any] = {}
         for key, value in device.items():
             self.properties[key] = value
+        _LOGGER.log(f"Created {self.id} {self.prodkey}")
         self.connected: bool = False
         self._client: mqtt.Client = None
         self._lock = asyncio.Lock()
