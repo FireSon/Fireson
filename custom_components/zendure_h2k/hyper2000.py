@@ -10,10 +10,10 @@ _LOGGER = logging.getLogger(__name__)
 class Hyper2000:
     properties : dict[str, any]
 
-    def __init__(self, id: str, prodkey: str) -> None:
+    def __init__(self, device: dict[str, any]) -> None:
         """Initialise."""
-        self.id = id
-        self.prodkey = prodkey
+        self.id = device["deviceKey"]
+        self.prodkey = device["productKey"]
         self.connected: bool = False
         self._client: mqtt.Client = None
         self._lock = asyncio.Lock()

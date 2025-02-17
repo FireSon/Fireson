@@ -145,7 +145,7 @@ class API:
                                 respJson = await response.json()
                                 _LOGGER.info(json.dumps(respJson["data"], indent=2))
                                 device = respJson["data"]
-                                h = Hyper2000(device["deviceKey"], device["productKey"])
+                                h = Hyper2000(device)
                                 for key, value in device.items():
                                     h.properties[key] = value
                                 hypers[dev["id"]] = h
