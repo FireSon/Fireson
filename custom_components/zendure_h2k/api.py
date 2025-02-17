@@ -143,9 +143,9 @@ class API:
                             response = await self.session.post(url=url, json=payload, headers=self.headers)
                             if response.ok:
                                 respJson = await response.json()
-                                _LOGGER.info(json.dumps(respJson["data"], indent=2))
                                 device = respJson["data"]
-                                hypers[dev["id"]] = Hyper2000(device)
+                                _LOGGER.info(json.dumps(device, indent=2))
+                                hypers[dev["id"]] = Hyper2000(device.items())
                             else:
                                 _LOGGER.error("Fetching device details failed!")
                                 _LOGGER.error(response.text)
