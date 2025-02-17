@@ -1,4 +1,8 @@
+import asyncio
 import logging
+import hashlib
+import json
+import paho.mqtt.client as mqtt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -6,9 +10,83 @@ _LOGGER = logging.getLogger(__name__)
 class Hyper2000:
     properties : dict[str, any]
 
-    def __init__(self, id: str) -> None:
+    def __init__(self, id: str, prodkey: str) -> None:
         """Initialise."""
         self.id = id
+        self.prodkey = prodkey
         self.connected: bool = False
-        # self.sensors : dict[str, hyperSensor]
+        self._client: mqtt.Client = None
+        self._lock = asyncio.Lock()
 
+    async def async_connect(self):
+        self.debug(f"Connecting to {self._host}:{self._port}")
+
+        def setup_connection():
+            client = mqtt.Client(f"HA-{self._topic}")
+            pwd = hashlib.md5(self.id.encode()).hexdigest().upper()[8:24]
+            client.username_pw_set(username=str(self.id), password=str(pwd))
+
+            state = client.connect("mqtteu.zen-iot.com")
+            client.loop()
+            client.loop_start()
+            client.on_message = self.onMessage
+            client.on_connect = self.onConnect
+            client.on_disconnect = self.onDisconnect
+
+            self.connected = client.is_connected()
+            self._client = client
+            
+            client.subscribe(f"/{self.prodkey}/{self.id}/properties/report")
+            client.subscribe(f"/{self.prodkey}/{self.id}/log")
+            client.subscribe(f"iot/{self.prodkey}/{self.id}/properties/write")
+
+            return state
+
+        setup_connection()
+        if not self.connected:
+            raise ConnectionError(f"Could not connect to MQTT server.")
+
+    def onMessage(self, _client, userdata, msg) -> dict:
+        payload = json.loads(msg.payload.decode())
+        self._payload = payload.copy()
+        self.debug(f"Publishing: {self._payload}")
+
+    def onConnect(self, _client, userdata, flags, rc):
+        self.debug(f"Has been connected successfully")
+
+    def onDisconnect(self, _client, userdata, rc):
+        self.disconnect()
+
+    def disconnect(self):
+        self.debug(f"Disconnecting from {self._host}:{self._port} and clean subs")
+        self._client.unsubscribe(self._topic)
+        self._client.disconnect()
+        self._client.loop_stop()
+        self.connected = None
+
+    def dumps_payload(payload):
+        return str(payload).replace("'", '"').replace('"{', "{").replace('}"', "}")
+
+    async def publish(self, instance, msg: dict, wait=False) -> bool:
+        async with self._lock:
+            if not self.is_connected:
+                return self.debug(f"publish fails {msg}, broker isn't connected.")
+            self._payload = None
+
+            # Change selected index.
+            async def publish_and_wait():
+                self._client.publish(self._topic_push, self.dumps_payload(msg))
+                while True:
+                    await asyncio.sleep(0.2)
+                    if self._payload is not None:
+                        break
+
+            # We will wait for any message for the next 3 seconds else we will return
+            self.debug(f"Publishing: {self.dumps_payload(msg)}")
+            task = self._loop.create_task(publish_and_wait())
+            if wait:
+                await asyncio.wait_for(task, 5)
+
+    @property
+    def is_connected(self) -> bool:
+        return self._client and self._client.is_connected()
