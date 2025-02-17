@@ -146,7 +146,7 @@ class API:
                                 device = respJson["data"]
                                 #_LOGGER.info(json.dumps(device, indent=2))
                                 _LOGGER.info(type(device))
-                                hypers[device["deviceKey"]] = Hyper2000(device["deviceKey"], device)
+                                hypers[device["deviceKey"]] = Hyper2000(device["deviceKey"], device["productKey"], device)
                             else:
                                 _LOGGER.error("Fetching device details failed!")
                                 _LOGGER.error(response.text)

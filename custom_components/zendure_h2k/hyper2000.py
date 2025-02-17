@@ -8,10 +8,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Hyper2000:
-    def __init__(self, id: str, device: dict) -> None:
+    def __init__(self, id: str, prod: str, device: dict) -> None:
         """Initialise."""
         self.id = id
-        self.prodkey = device["productKey"]
+        self.prodkey = prod
         self.properties : dict[str, any] = {}
         for key, value in device.items():
             self.properties[key] = value
