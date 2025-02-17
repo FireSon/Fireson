@@ -96,11 +96,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         _LOGGER.debug('Energy usage state changed!')
 
     async def async_update_data(self):
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
+        """Check interfaces"""
         try:
             if not self.hypers:
                 self.hypers = await self.api.getHypers(self.hypers)

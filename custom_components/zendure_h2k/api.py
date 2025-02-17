@@ -141,7 +141,7 @@ class API:
                 devices = respJson["data"]
                 _LOGGER.debug(devices)
                 for dev in devices:
-                    if dev["productName"] == 'SolarFlow2.0':
+                    if dev["productName"] == 'ja72U0ha' or dev["productName"] == 'gDa3tb':
                         payload = {"deviceId": dev["id"]}
                         try:
                             url = f'{self.zen_api}{SF_DEVICEDETAILS_PATH}'
