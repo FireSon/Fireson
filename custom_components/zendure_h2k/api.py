@@ -147,7 +147,7 @@ class API:
                                 device = respJson["data"]
                                 h = Hyper2000(device)
                                 hypers[dev["id"]] = h
-                                _LOGGER.info(f'Hyper2000[{dev["id"]}]: {h}')
+                                _LOGGER.info(f'Hyper2000[{dev["id"]}]: {h.id}')
                                 await h.async_connect()
                             else:
                                 _LOGGER.error("Fetching device details failed!")

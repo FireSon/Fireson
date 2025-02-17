@@ -23,7 +23,7 @@ class Hyper2000:
         _LOGGER.debug(f"Connecting {self.id}")
 
         def setup_connection():
-            client = mqtt.Client(f"HA-{self._topic}")
+            client = mqtt.Client(f"HA-{self.id}")
             pwd = hashlib.md5(self.id.encode()).hexdigest().upper()[8:24]
             client.username_pw_set(username=str(self.id), password=str(pwd))
 
@@ -36,11 +36,13 @@ class Hyper2000:
 
             self.connected = client.is_connected()
             self._client = client
-            
+
+            _LOGGER.debug(f"subscribed {self.id}")
             client.subscribe(f"/{self.prodkey}/{self.id}/properties/report")
             client.subscribe(f"/{self.prodkey}/{self.id}/log")
             client.subscribe(f"iot/{self.prodkey}/{self.id}/properties/write")
 
+            _LOGGER.debug(f"ready {self.id}")
             return state
 
         setup_connection()
