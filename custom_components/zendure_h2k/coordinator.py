@@ -97,12 +97,12 @@ class ZendureCoordinator(DataUpdateCoordinator):
 
     async def async_update_data(self):
         """Check interfaces"""
+        _LOGGER.debug('async_update_data')
         try:
             if not self.hypers:
                 self.hypers = await self.hass.async_add_executor_job(self.api.getHypers)
                 _LOGGER.debug(f'Found: {len(self.hypers)} hypers')
-
-            if not self.hypers:
+            else:
                 for k, h in self.hypers.items():
                     try:
                         _LOGGER.info(f'Try Connect Hyper2000: {h.hid}')

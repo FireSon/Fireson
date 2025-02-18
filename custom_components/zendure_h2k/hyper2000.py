@@ -16,18 +16,19 @@ class Hyper2000():
         # for key, value in device.items():
         #     self.properties[key] = value
         self._client: mqtt_client = None
+        self._loop = asyncio.get_running_loop()
         self._lock = asyncio.Lock()
 
     async def async_connect(self):
         _LOGGER.log(f"Connecting {self.hid}")
 
         def setup_connection():
-            _LOGGER.log(f"Connecting {self.hid}")
+            _LOGGER.log(f"Setup {self.hid}")
 
             client = mqtt_client(f"HA-{self.hid}")
 
             pwd = hashlib.md5(self.hid.encode()).hexdigest().upper()[8:24]
-            client.username_pw_set(username=str(self.hid), password=str(pwd)
+            client.username_pw_set(username=str(self.hid), password=str(pwd))
             state = client.connect("mqtteu.zen-iot.com")
             client.loop()
             client.loop_start()
