@@ -2,7 +2,7 @@ import asyncio
 import logging
 import hashlib
 import json
-from paho.mqtt import client as mqtt_client
+# from paho.mqtt import client as mqtt_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class Hyper2000():
         # self._client: mqtt.Client = None
         # self._lock = asyncio.Lock()
 
-    async def async_connect(self):
+    def async_connect(self):
         _LOGGER.log(f"Connecting {self.hid}")
 
         def setup_connection():
