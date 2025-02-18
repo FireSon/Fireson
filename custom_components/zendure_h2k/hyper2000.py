@@ -2,70 +2,64 @@ import asyncio
 import logging
 import hashlib
 import json
-# from paho.mqtt import client as mqtt_client
+from paho.mqtt import client as mqtt_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class Hyper2000():
+class Hyper2000(mqtt_client):
     def __init__(self, h_id, h_prod, device: dict) -> None:
         """Initialise."""
         self.hid = h_id
         self.prodkey = h_prod 
         self.properties : dict[str, any] = {}
-        # super().__init__(client_id=f"HA-{self.hid}, clean_session=True)
-        # self.enable_logger()
-        pwd = hashlib.md5(self.hid.encode()).hexdigest().upper()[8:24]
-        
-        # self.username_pw_set(username=str(self.hid), password=str(pwd))
-        # self.on_message = self.onMessage
-        # self.on_connect = self.onConnect
-        # self.connect("mqtteu.zen-iot.com")
-        # self.on_disconnect = self.onDisconnect
-
-        # self.loop_start()
-
-
         # for key, value in device.items():
         #     self.properties[key] = value
-        # self.connected: bool = False
-        # self._loop = asyncio.get_running_loop()
-        # self._client: mqtt.Client = None
-        # self._lock = asyncio.Lock()
 
-    def async_connect(self):
+        super().__init__(client_id=f"HA-{self.hid}, clean_session=False)
+        self.enable_logger()
+        self.on_message = self.onMessage
+        self.on_connect = self.onConnect
+        self.on_disconnect = self.onDisconnect
+
+        self.loop_start()
+        self.connected: bool = False
+        self._loop = asyncio.get_running_loop()
+        self._client: mqtt.Client = None
+        self._lock = asyncio.Lock()
+
+    async def async_connect(self):
         _LOGGER.log(f"Connecting {self.hid}")
 
         def setup_connection():
             _LOGGER.log(f"Connecting {self.hid}")
-        #     client = mqtt.Client(f"HA-{self.hid}")
-        #     pwd = hashlib.md5(self.hid.encode()).hexdigest().upper()[8:24]
-        #     client.username_pw_set(username=str(self.hid), password=str(pwd))
+            pwd = hashlib.md5(self.hid.encode()).hexdigest().upper()[8:24]
+            self.username_pw_set(username=str(self.hid), password=str(pwd))
 
-        #     state = client.connect("mqtteu.zen-iot.com")
-        #     client.loop()
-        #     client.loop_start()
-        #     client.on_message = self.onMessage
-        #     client.on_connect = self.onConnect
-        #     client.on_disconnect = self.onDisconnect
+            state = client.connect("mqtteu.zen-iot.com")
+            client.loop()
+            client.loop_start()
+            client.on_message = self.onMessage
+            client.on_connect = self.onConnect
+            client.on_disconnect = self.onDisconnect
 
-        #     self.connected = client.is_connected()
-        #     self._client = client
+            self.connected = client.is_connected()
+            self._client = client
 
-        #     topic = f"/{self.prodkey}/{self.hid}/properties/report"
-        #     client.subscribe(topic)
-        #     _LOGGER.log(f"subscribed {self.hid} {topic}")
+            topic = f"/{self.prodkey}/{self.hid}/properties/report"
+            client.subscribe(topic)
+            _LOGGER.log(f"subscribed {self.hid} {topic}")
 
-        #     topic = f"/{self.prodkey}/{self.hid}/log"
-        #     client.subscribe(topic)
-        #     _LOGGER.log(f"subscribed {self.hid} {topic}")
+            topic = f"/{self.prodkey}/{self.hid}/log"
+            client.subscribe(topic)
+            _LOGGER.log(f"subscribed {self.hid} {topic}")
 
-        #     topic = f"iot/{self.prodkey}/{self.hid}/properties/write"
-        #     client.subscribe(topic)
-        #     _LOGGER.log(f"subscribed {self.hid} {topic}")
+            topic = f"iot/{self.prodkey}/{self.hid}/properties/write"
+            client.subscribe(topic)
+            _LOGGER.log(f"subscribed {self.hid} {topic}")
 
-        #     _LOGGER.log(f"ready {self.hid}")
-        #     return state
+            _LOGGER.log(f"ready {self.hid}")
+            return state
 
         setup_connection()
         if not self.connected:
