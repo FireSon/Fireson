@@ -2,12 +2,12 @@ import asyncio
 import logging
 import hashlib
 import json
-import paho.mqtt.client as mqtt
+from paho.mqtt import client as mqtt_client
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class Hyper2000(mqtt.Client):
+class Hyper2000(mqtt_client):
     def __init__(self, h_id, h_prod, device: dict) -> None:
         """Initialise."""
         self.hid = h_id
