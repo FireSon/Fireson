@@ -101,7 +101,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
             if not self.hypers:
                 self.hypers = await self.api.getHypers()
                 _LOGGER.debug(f'Found: {len(self.hypers)} hypers')
-                for h in self.hypers:
+                for k, h in self.hypers.items():
                     try:
                         _LOGGER.info(f'Connect Hyper2000: {h.hid}')
                         await h.async_connect()
