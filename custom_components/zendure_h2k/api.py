@@ -126,7 +126,7 @@ class API:
                 await self.connect()
             url = f'{self.zen_api}{SF_DEVICELIST_PATH}'
             _LOGGER.info("Getting device list ...")
-          
+
             response = await self.session.post(url=url, headers=self.headers)
             if response.ok:
                 respJson = await response.json()

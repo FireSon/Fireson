@@ -99,29 +99,26 @@ class ZendureCoordinator(DataUpdateCoordinator):
         """Check interfaces"""
         _LOGGER.debug('async_update_data')
         try:
-            if not hypers:
-                hypers = await self.hass.async_add_executor_job(self.api.getHypers)
-                _LOGGER.debug(f'Found: {len(hypers)} hypers')
+            if not self.hypers:
+                self.hypers = await self.api.getHypers()
+                _LOGGER.debug(f'Found: {len(self.hypers)} hypers')
             else:
-                _LOGGER.debug(f'Update: {len(hypers)} hypers')
-                for k, h in hypers.items():
-                    try:
-                        _LOGGER.info(f'Try Connect Hyper2000: {h.hid}')
-                        #if not h.connected:
-                        await self.hass.async_add_executor_job(h.async_connect)
+                _LOGGER.debug(f'Update: {len(self.hypers)} hypers')
+                for k, h in self.hypers.items():
+                    try: 
+                        if not h.connected:
+                            h.connect()
+                        else:
+                            h.refresh()
                     except Exception as err:
                         _LOGGER.error(err)
 
-            devices = await self.hass.async_add_executor_job(self.api.get_devices)
-            self.do_callback()
-        except APIAuthError as err:
-            _LOGGER.error(err)
-            raise UpdateFailed(err) from err
         except Exception as err:
-            # This will show entities as unavailable by raising UpdateFailed exception
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            _LOGGER.error(err)
 
         # What is returned here is stored in self.data by the DataUpdateCoordinator
+        devices = await self.hass.async_add_executor_job(self.api.get_devices)
+        self.do_callback()
         return ZendureAPIData(self.api.controller_name, devices)
 
     def subscribe_hyper_callback(self, callback):
@@ -141,7 +138,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
                 else:
                     callback(callback_arg)
             except Exception as e:
-                self.logger.error("Error while executing callback : %s", e)
+                _LOGGER.error("Error while executing callback : %s", e)
 
     def get_device_by_id(
         self, device_type: DeviceType, device_id: int
