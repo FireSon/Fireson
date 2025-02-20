@@ -115,28 +115,15 @@ class ZendureCoordinator(DataUpdateCoordinator):
     async def async_update_data(self) -> None:
         """Check interfaces"""
         _LOGGER.debug('async_update_data')
-        # # try:
-        # #     if not self.hypers:
-        # #         self.hypers = await self.api.getHypers(self._hass)
-        # #         _LOGGER.debug(f'Found: {len(self.hypers)} hypers')
-        # #     else:
-        # #         _LOGGER.debug(f'Update: {len(self.hypers)} hypers')
-        # #         for k, h in self.hypers.items():
-        # #             try: 
-        # #                 if not h.connected:
-        # #                     h.addSensor = self.addSensor
-        # #                     h.connect()
-        # #                 else:
-        # #                     h.refresh()
-        # #             except Exception as err:
-        # #                 _LOGGER.error(err)
+        try:
+            for k, h in self.hypers.items():
+                try: 
+                    if not h.connected:
+                        h.connect()
+                    else:
+                        h.refresh()
+                except Exception as err:
+                    _LOGGER.error(err)
 
-        # # except Exception as err:
-        # #     _LOGGER.error(err)
-
-        # # What is returned here is stored in self.data by the DataUpdateCoordinator
-
-        # await asyncio.sleep(1)
-
-        # _LOGGER.info("Ready update data!")
-        # return ZendureAPIData(self.api.controller_name)
+        except Exception as err:
+            _LOGGER.error(err)
