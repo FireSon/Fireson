@@ -181,10 +181,10 @@ class Hyper2000Sensor(SensorEntity):
         except Exception as err:
             _LOGGER.error(f"Error {err} setting state value: {self.hyper.name} => {state}")
 
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return unit of temperature."""
-        return UnitOfTemperature.CELSIUS
+    # @property
+    # def native_unit_of_measurement(self) -> str | None:
+    #     """Return unit of temperature."""
+    #     return UnitOfTemperature.CELSIUS
 
     @property
     def state_class(self) -> str | None:
