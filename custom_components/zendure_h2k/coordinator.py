@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import asyncio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -23,7 +24,7 @@ from homeassistant.core import (
     callback,
 )
 
-from .api import API, APIAuthError, Device, DeviceType, Hyper2000
+from .api import API, APIAuthError, Hyper2000
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     CONF_CONSUMED,
@@ -38,14 +39,11 @@ class ZendureAPIData:
     """Class to hold api data."""
 
     controller_name: str
-    devices: list[Device]
 
 
 class ZendureCoordinator(DataUpdateCoordinator):
     """My Zendure coordinator."""
 
-    data: ZendureAPIData
-    hypers: dict[str, Hyper2000] = {}
     addSensor: AddEntitiesCallback
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -56,7 +54,7 @@ class ZendureCoordinator(DataUpdateCoordinator):
         self.host = config_entry.data[CONF_HOST]
         self.user = config_entry.data[CONF_USERNAME]
         self.pwd = config_entry.data[CONF_PASSWORD]
-        self._hyper_callbacks = []
+        self.hypers: dict[str, Hyper2000] = {}
 
         # set variables from options.  You need a default here incase options have not been set
         self.poll_interval = config_entry.options.get(
@@ -87,6 +85,25 @@ class ZendureCoordinator(DataUpdateCoordinator):
         # Initialise your api here
         self.api = API(self._hass, self.host, self.user, self.pwd)
 
+    async def initialize(self) -> bool:
+        _LOGGER.debug('Start initialize')
+        try:
+            if not await self.api.connect():
+                return False
+            self.hypers = await self.api.getHypers(self._hass)
+            _LOGGER.debug(f'Found: {len(self.hypers)} hypers')
+
+            for k, h in self.hypers.items():
+                try: 
+                    h.addSensor = self.addSensor
+                    h.connect()
+                except Exception as err:
+                    _LOGGER.error(err)
+
+        except Exception as err:
+            _LOGGER.error(err)
+        return True
+
     @callback
     def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
         """Publish state change to MQTT."""
@@ -95,61 +112,31 @@ class ZendureCoordinator(DataUpdateCoordinator):
             return
         _LOGGER.debug('Energy usage state changed!')
 
-    async def async_update_data(self):
+    async def async_update_data(self) -> None:
         """Check interfaces"""
         _LOGGER.debug('async_update_data')
-        try:
-            if not self.hypers:
-                self.hypers = await self.api.getHypers()
-                _LOGGER.debug(f'Found: {len(self.hypers)} hypers')
-            else:
-                _LOGGER.debug(f'Update: {len(self.hypers)} hypers')
-                for k, h in self.hypers.items():
-                    try: 
-                        if not h.connected:
-                            h.connect()
-                        else:
-                            h.refresh()
-                    except Exception as err:
-                        _LOGGER.error(err)
+        # # try:
+        # #     if not self.hypers:
+        # #         self.hypers = await self.api.getHypers(self._hass)
+        # #         _LOGGER.debug(f'Found: {len(self.hypers)} hypers')
+        # #     else:
+        # #         _LOGGER.debug(f'Update: {len(self.hypers)} hypers')
+        # #         for k, h in self.hypers.items():
+        # #             try: 
+        # #                 if not h.connected:
+        # #                     h.addSensor = self.addSensor
+        # #                     h.connect()
+        # #                 else:
+        # #                     h.refresh()
+        # #             except Exception as err:
+        # #                 _LOGGER.error(err)
 
-        except Exception as err:
-            _LOGGER.error(err)
+        # # except Exception as err:
+        # #     _LOGGER.error(err)
 
-        # What is returned here is stored in self.data by the DataUpdateCoordinator
-        devices = await self.hass.async_add_executor_job(self.api.get_devices)
-        self.do_callback()
-        return ZendureAPIData(self.api.controller_name, devices)
+        # # What is returned here is stored in self.data by the DataUpdateCoordinator
 
-    def subscribe_hyper_callback(self, callback):
-        """ Subscribe callback to execute """
-        self._hyper_callbacks.append(callback)
+        # await asyncio.sleep(1)
 
-    def unsubscribe_hyper_callback(self, callback):
-        """ Register callback to execute """
-        self._hyper_callbacks.remove(callback)
-
-    def do_callback(self, callback_arg=None):
-        """ Execute callbacks registered for specified callback type """
-        for callback in self._hyper_callbacks:
-            try:
-                if callback_arg is None:
-                    callback()
-                else:
-                    callback(callback_arg)
-            except Exception as e:
-                _LOGGER.error("Error while executing callback : %s", e)
-
-    def get_device_by_id(
-        self, device_type: DeviceType, device_id: int
-    ) -> Device | None:
-        """Return device by device id."""
-        # Called by the binary sensors and sensors to get their updated data from self.data
-        try:
-            return [
-                device
-                for device in self.data.devices
-                if device.device_type == device_type and device.device_id == device_id
-            ][0]
-        except IndexError:
-            return None
+        # _LOGGER.info("Ready update data!")
+        # return ZendureAPIData(self.api.controller_name)

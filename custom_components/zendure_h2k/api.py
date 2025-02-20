@@ -1,10 +1,3 @@
-"""API Placeholder.
-
-You should create your api seperately and have it hosted on PYPI.  This is included here for the sole purpose
-of making this Zendure code executable.
-"""
-
-from dataclasses import dataclass
 from enum import StrEnum
 import os
 import sys
@@ -13,9 +6,6 @@ import json
 from flask import session
 import requests
 
-from random import choice, randrange
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .hyper2000 import Hyper2000
@@ -24,40 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SF_API_BASE_URL = "https://app.zendure.tech"
 
-
-class DeviceType(StrEnum):
-    """Device types."""
-
-    TEMP_SENSOR = "temp_sensor"
-    DOOR_SENSOR = "door_sensor"
-    OTHER = "other"
-
-
-DEVICES = [
-    {"id": 1, "type": DeviceType.TEMP_SENSOR},
-    {"id": 1, "type": DeviceType.DOOR_SENSOR},
-    {"id": 2, "type": DeviceType.TEMP_SENSOR},
-    {"id": 2, "type": DeviceType.DOOR_SENSOR},
-    {"id": 3, "type": DeviceType.TEMP_SENSOR},
-    {"id": 3, "type": DeviceType.DOOR_SENSOR},
-    {"id": 4, "type": DeviceType.TEMP_SENSOR},
-    {"id": 4, "type": DeviceType.DOOR_SENSOR},
-    {"id": 5, "type": DeviceType.TEMP_SENSOR},
-    {"id": 5, "type": DeviceType.DOOR_SENSOR},
-]
-
-
-@dataclass
-class Device:
-    """API device."""
-
-    device_id: int
-    device_unique_id: str
-    device_type: DeviceType
-    name: str
-    state: int | bool
-    isNew: bool
-  
 
 class API:
     """Class for Zendure API."""
@@ -70,11 +26,8 @@ class API:
         self.session = None
 
     async def connect(self) -> bool:
+        _LOGGER.info("Connecting to Zendure")
         self.session = async_get_clientsession(self.hass)
-        #retry = Retry(connect=3, backoff_factor=0.5)
-        #adapter = HTTPAdapter(max_retries=retry)
-        # self.session.mount('http://', adapter)
-        # self.session.mount('https://', adapter)
         self.headers = {
                 'Content-Type':'application/json',
                 'Accept-Language': 'en-EN',
@@ -96,13 +49,10 @@ class API:
         
         try:
             url = f'{self.zen_api}{SF_AUTH_PATH}'
-            _LOGGER.info("Authenticating with Zendure ...")
-
             response = await self.session.post(url=url, json=authBody, headers=self.headers)
             if response.ok:
                 respJson = await response.json()
                 token = respJson["data"]["accessToken"]
-                _LOGGER.info('Got bearer token!')
                 self.headers["Blade-Auth"] = f'bearer {token}'
             else:
                 _LOGGER.error("Authentication failed!")
@@ -110,16 +60,20 @@ class API:
                 return False
         except Exception as e:
             _LOGGER.exception(e)
+            _LOGGER.info("Unable to connected to Zendure!")
             return False
+
+        _LOGGER.info("Connected to Zendure!")
         return True
 
     def disconnect(self):
         self.session.close()
         self.session = None
 
-    async def getHypers(self) -> dict[str, Hyper2000]:
+    async def getHypers(self, hass: HomeAssistant) -> dict[str, Hyper2000]:
         SF_DEVICELIST_PATH = "/productModule/device/queryDeviceListByConsumerId"
         SF_DEVICEDETAILS_PATH = "/device/solarFlow/detail"
+        SF_DEVICEDSECRET = "/developer/api/apply"
         hypers : dict[str, Hyper2000] = {}
         try:
             if self.session is None:
@@ -130,31 +84,36 @@ class API:
             response = await self.session.post(url=url, headers=self.headers)
             if response.ok:
                 respJson = await response.json()
-                _LOGGER.info(json.dumps(respJson["data"], indent=2))
                 devices = respJson["data"]
-                _LOGGER.debug(f'devices: {devices}')
                 for dev in devices:
                     _LOGGER.debug(f'prodname: {dev["productName"]}')
                     if dev["productName"] == 'Hyper 2000':
-                        payload = {"deviceId": dev["id"]}
                         try:
+                            h : hyper2000 = None
+                            payload = {"deviceId": dev["id"]}
                             url = f'{self.zen_api}{SF_DEVICEDETAILS_PATH}'
                             _LOGGER.info(f'Getting device details for [{dev["id"]}] ...')
                             response = await self.session.post(url=url, json=payload, headers=self.headers)
                             if response.ok:
                                 respJson = await response.json()
-                                device = respJson["data"]
-                                #_LOGGER.info(json.dumps(device, indent=2))
-                                _LOGGER.info(type(device))
-                                hid = device["deviceKey"]
-                                _LOGGER.info(f'Hyper: [{hid}] ')
-
-                                h = Hyper2000(device["deviceKey"], device["productKey"], device)
+                                data = respJson["data"]
+                                h = Hyper2000(hass, data["deviceKey"], data["productKey"], data["deviceName"], data)
                                 if h.hid:
                                     _LOGGER.info(f'Hyper: [{h.hid}] ')
-                                    hypers[device["deviceKey"]] = h
+                                    hypers[data["deviceKey"]] = h
                                 else:
                                     _LOGGER.info(f'Hyper: [??] ')
+
+                                # Get the appsecret 
+                                payload = {"account": self.username,"snNumber": data["snNumber"]}
+                                url = f'{self.zen_api}{SF_DEVICEDSECRET}'
+                                response = await self.session.post(url=url, json=payload, headers=self.headers)
+                                if response.ok:
+                                    respJson = await response.json()
+                                    data = respJson["data"]
+                                    h.mqttUrl = data["mqttUrl"]
+                                    h.appKey = data["appKey"]
+                                    h.secret = data["secret"]
                             else:
                                 _LOGGER.error("Fetching device details failed!")
                                 _LOGGER.error(response.text)
@@ -168,51 +127,10 @@ class API:
 
         return hypers
 
-
     @property
     def controller_name(self) -> str:
         """Return the name of the controller."""
         return self.zen_api.replace(".", "_")
-
-    def get_devices(self) -> list[Device]:
-        """Get devices on api."""
-        return [
-            Device(
-                device_id=device.get("id"),
-                device_unique_id=self.get_device_unique_id(
-                    device.get("id"), device.get("type")
-                ),
-                device_type=device.get("type"),
-                name=self.get_device_name(device.get("id"), device.get("type")),
-                state=self.get_device_value(device.get("id"), device.get("type")),
-                isNew=False,
-            )
-            for device in DEVICES
-        ]
-
-    def get_device_unique_id(self, device_id: str, device_type: DeviceType) -> str:
-        """Return a unique device id."""
-        if device_type == DeviceType.DOOR_SENSOR:
-            return f"{self.controller_name}_D{device_id}"
-        if device_type == DeviceType.TEMP_SENSOR:
-            return f"{self.controller_name}_T{device_id}"
-        return f"{self.controller_name}_Z{device_id}"
-
-    def get_device_name(self, device_id: str, device_type: DeviceType) -> str:
-        """Return the device name."""
-        if device_type == DeviceType.DOOR_SENSOR:
-            return f"DoorSensor{device_id}"
-        if device_type == DeviceType.TEMP_SENSOR:
-            return f"TempSensor{device_id}"
-        return f"OtherSensor{device_id}"
-
-    def get_device_value(self, device_id: str, device_type: DeviceType) -> int | bool:
-        """Get device random value."""
-        if device_type == DeviceType.DOOR_SENSOR:
-            return choice([True, False])
-        if device_type == DeviceType.TEMP_SENSOR:
-            return randrange(15, 28)
-        return randrange(1, 10)
 
 
 class APIAuthError(Exception):

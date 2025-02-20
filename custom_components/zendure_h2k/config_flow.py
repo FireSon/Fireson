@@ -45,6 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # )
 
     try:
+        _LOGGER.debug('Check API connection')
         api = API(hass, data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
         await api.connect()
         # If you cannot connect, raise CannotConnect
