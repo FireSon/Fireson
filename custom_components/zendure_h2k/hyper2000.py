@@ -1,24 +1,21 @@
+
 from __future__ import annotations
-import asyncio
 import logging
-import hashlib
-import json
-from paho.mqtt import client as mqtt_client
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature
-from homeassistant.core import callback
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class Hyper2000():
-    addSensor: AddEntitiesCallback
-
+    addSensors: AddEntitiesCallback
+ 
     def __init__(self, hass: HomeAssistant, h_id, h_prod, name, device: dict) -> None:
         """Initialise."""
         self._hass = hass
@@ -27,131 +24,70 @@ class Hyper2000():
         self.name = name 
         self.unique = "".join(name.split())
         self.properties : dict[str, any] = {}
-        self.sensors : dict[str, Hyper2000Entity] = {}
+        self.sensors : dict[str, Hyper2000Sensor] = {}
         # for key, value in device.items():
         #     self.properties[key] = value
-        self._client: mqtt_client = None
-        self._loop = asyncio.get_running_loop()
-        self._lock = asyncio.Lock()
-        self.connected : bool = False
-        self._topic_refresh = f"iot/{self.prodkey}/{self.hid}/properties/read"
-        self.mqttUrl: str = None
-        self.appKey: str = None
-        self.secret: str = None
+        self._topic_read = f"iot/{self.prodkey}/{self.hid}/properties/read"
+        self._topic_write = f"iot/{self.prodkey}/{self.hid}/properties/write"
+        self._topic_function = f"iot/{self.prodkey}/{self.hid}/function/invoke"
 
-    def connect(self):
-        try:
-            _LOGGER.info(f'Connect Hyper2000: {self.hid} {self.prodkey} {self.name}')
-            self.onAddSensor("hyperTemp")
-            if self.mqttUrl:
-                self._client = mqtt_client.Client(client_id=f'ha-{self.hid}', clean_session=False)
-                self._client.username_pw_set(username=str(self.appKey), password=str(self.secret))
-                self._client.on_message = self.onMessageCloud
-                state = self._client.connect(self.mqttUrl, 1883, 120)
-                self._client.subscribe(f'{self.appKey}/{self.hid}/state')
-                self._client.subscribe(f'{self.appKey}/sensor/#')
-                self._client.subscribe(f'{self.appKey}/switch/#')
-                _LOGGER.info(f"Ready cloud {self.hid} {self.name}")
-            else:
-                self._client = mqtt_client.Client(client_id=str(self.hid), clean_session=False)
-                pwd = hashlib.md5(self.hid.encode()).hexdigest().upper()[8:24]
-                self._client.username_pw_set(username=str(self.hid), password=str(pwd))
-                self._client.on_message = self.onMessage
-                state = self._client.connect("mqtteu.zen-iot.com", 1883, 120)
-                self._client.subscribe(f'/{self.prodkey}/{self.hid}/#')
-                self._client.subscribe(f"iot/{self.prodkey}/{self.hid}/#")
-                _LOGGER.info(f"Ready local {self.hid} {self.name}")
+    def create_sensors(self):
 
-            self._client.suppress_exceptions = True
-            self._client.loop()
-            self._client.loop_start()
-            self._client.on_connect = self.onConnect
-            self._client.on_disconnect = self.onDisconnect
-            self.connected = self._client.is_connected()
+        def add(uniqueid: str, name: str, template: str = None, uom: str = None, deviceclass: str = None) -> Hyper2000Sensor:
+            if template:
+                s = Hyper2000Sensor(self, uniqueid, name, Template(template, self._hass), uom, deviceclass)
+            else: 
+                s = Hyper2000Sensor(self, uniqueid, name, None, uom, deviceclass)
+            self.sensors[uniqueid] = s
+            return s
 
-        except Exception as err:
-            _LOGGER.error("Error while connecting : %s", self.hid)
-            _LOGGER.error(err)
+        """Add Hyper2000 sensors."""
+        _LOGGER.info(f"Adding sensors Hyper2000 {self.name}")
+        sensors = [
+            add('hubState', 'Hub State'),
+            add('solarInputPower', 'Solar Input Power', None, 'W', 'power'),
+            add('packInputPower', 'Pack Input Power', None, 'W', 'power'),
+            add('outputPackPower', 'Output Pack Power', None, 'W', 'power'),
+            add('outputHomePower', 'Output Home Power', None, 'W', 'power'),
+            add('outputLimit', 'Output Limit', None, 'W'),
+            add('inputLimit', 'Input Limit', None, 'W'),
+            add('remainOutTime', 'Remain Out Time', None, 'min', 'duration'),
+            add('remainInputTime', 'Remain Input Time', None, 'min', 'duration'),
+            add('packState', 'Pack State', None),
+            add('packNum', 'Pack Num', None),
+            add('electricLevel', 'Electric Level', None, '%', 'battery'),
+            add('socSet', 'socSet', '{{ value | int / 10 }}', '%'),
+            add('minSoc', 'minSOC', '{{ value | int / 10 }}', '%'),
+            add('inverseMaxPower', 'Inverse Max Power', None, 'W'),
+            add('wifiState', 'WiFi State', '{{ value | bool('') }}'),
+            add('heatState', 'Heat State', '{{ value | bool('') }}'),
+            add('acMode', 'AC Mode', None),
+            add('solarPower1', 'Solar Power 1', None, 'W', 'power'),
+            add('solarPower2', 'Solar Power 2', None, 'W', 'power'),
+            add('passMode', 'Pass Mode', None),
+            add('hyperTmp', 'Hyper Temperature', '{{ (value | float/10 - 273.15) | round(2) }}', '°C', 'temperature'),
 
-    def refresh(self):
-        try:
-            if not self.mqttUrl:
-                _LOGGER.info(f'Refresh Hyper2000: {self._topic_refresh}')
-                self._client.publish(self._topic_refresh,'{"properties": ["getAll"]}')
-            else:
-                self._client.publish(self._topic_refresh,'{"properties": ["getAll"]}')
-        except Exception as err:
-            _LOGGER.error("Error while refreshing : %s", self.hid)
-            _LOGGER.error(err)
+            # add('Batterie1maxTemp', 'Batterie 1 maxTemp', '{{ (value | float/10 - 273.15) | round(2) }}', '°C', 'temperature'),
+            # add('Batterie1minVol', 'Batterie 1 minVol', '{{ (value | float/100) | round(2) }}', 'V', 'voltage'),
+            # add('Batterie1maxVol', 'Batterie 1 maxVol', '{{ (value | float/100) | round(2) }}', 'V', 'voltage'),
+            # add('Batterie1totalVol', 'Batterie 1 totalVol', '{{ (value | float/100) | round(2) }}', 'V', 'voltage'),
+        ]
+        Hyper2000.addSensors(sensors)
 
-    @callback
-    def onMessage(self, client, userdata, msg):
-        try:
-            _LOGGER.info(f"Receive: {self.hid} => {msg.topic}")
-            value = msg.payload.decode()
-            _LOGGER.info(value)
-        except Exception as err:
-            _LOGGER.error(err)
-            
-    @callback
-    def onMessageCloud(self, client, userdata, msg):
-        try:
-            if not msg.payload:
-                _LOGGER.info(f"Cloud property: {msg.topic} => {msg}")
-                return
-            payload = json.loads(msg.payload.decode())
-            parameter = msg.topic.split('/')[-1]
-            if parameter == 'config':
-                propertyName = payload['name']
-                if not propertyName in self.properties:
-                    try:
-                        _LOGGER.info(f"Cloud property: {self.hid} {msg.topic} => {payload}")
-                        self._hass.loop.call_soon_threadsafe(self.onAddSensor, propertyName)
-                    except Exception as err:
-                        _LOGGER.error(f"Error {err} create sensor:  {self.hid} {msg.topic}")
-            elif parameter == 'state':
-                for p in payload:
-                    if sensor := self.sensors.get(p, None):
-                        try:
-                            _LOGGER.info(f"Update sensor:  {self.hid} {msg.topic}")
-                            sensor.update_value(payload[p])
-                        except ValueError:
-                            _LOGGER.error(f"Error value: {p} => {payload[p]}")
-                    else:
-                        _LOGGER.info(f"Found unknown state value: {self.hid} {msg.topic}")
-            else:
-                _LOGGER.info(f"Cloud property: {parameter} => {payload}")
 
-        except Exception as err:
-            _LOGGER.error(err)
-
-    def onAddSensor(self, propertyName: Str):
+    def onAddSensor(self, propertyName: str, value = None):
         try:
             _LOGGER.info(f"{self.hid} new sensor: {propertyName}")
-            sensor = Hyper2000Sensor(self, propertyName)
-            self.properties[propertyName] = sensor
+            sensor = Hyper2000Sensor(self, propertyName, propertyName)
             self.sensors[propertyName] = sensor
-            self.addSensor([sensor])
+            Hyper2000.addSensors([sensor])
+            if (value):
+                sensor.update_value(value)
         except Exception as err:
             _LOGGER.error(err)
 
-    def onConnect(self, _client, userdata, flags, rc):
-        _LOGGER.info(f"{self.hid} has been connected successfully")
-        self.connected = True
-
-    def onDisconnect(self, _client, userdata, rc):
-        self._client.disconnect()
-
-    def disconnect(self):
-        _LOGGER.info(f"Disconnecting and clean subs")
-        # self._client.unsubscribe(self._topic)
-        self._client.disconnect()
-        self._client.loop_stop()
-        self.connected = False
-
-    @property
-    def is_connected(self) -> bool:
-        return self._client and self._client.is_connected()
+    def update_battery(self, data):
+        _LOGGER.info(f"update_battery: {self.hid} => {data}")
 
     def dumps_payload(payload):
         return str(payload).replace("'", '"').replace('"{', "{").replace('}"', "}")
@@ -159,7 +95,7 @@ class Hyper2000():
 
 class Hyper2000Sensor(SensorEntity):
     def __init__(
-        self, hyper: Hyper2000, name
+        self, hyper: Hyper2000, uniqueid: str, name: str, template: Template | None = None, uom: str = None, deviceclass: str = None
     ) -> None:
         """Initialize a Hyper2000 entity."""
         self._attr_available = True
@@ -169,35 +105,23 @@ class Hyper2000Sensor(SensorEntity):
             "manufacturer": "Zendure",
             "model": hyper.prodkey,
         }
+        self.hyper = hyper
         self._attr_name = f"{hyper.name} {name}"
         self._attr_should_poll = False
-        self._attr_unique_id = f"{hyper.unique}-{name}"
-        self.hyper = hyper
+        self._attr_unique_id = f"{hyper.unique}-{uniqueid}"
+        self._attr_native_unit_of_measurement = uom
+        self._value_template: Template | None = template
+        self._attr_device_class = deviceclass
 
-    def update_value(self, state):
+    def update_value(self, value):
         try:
-            self._attr_native_value = state
-            self.schedule_update_ha_state()
+            _LOGGER.info(f"Update sensor:  {self._attr_name} => {value}")
+
+            if self._value_template is not None:
+                self._attr_native_value = self._value_template.async_render_with_possible_json_value(value, None)
+                self.schedule_update_ha_state()
+            elif isinstance(value, (int, float)):
+                self._attr_native_value =  int(value)
+                self.schedule_update_ha_state()
         except Exception as err:
-            _LOGGER.error(f"Error {err} setting state value: {self.hyper.name} => {state}")
-
-    # @property
-    # def native_unit_of_measurement(self) -> str | None:
-    #     """Return unit of temperature."""
-    #     return UnitOfTemperature.CELSIUS
-
-    @property
-    def state_class(self) -> str | None:
-        """Return state class."""
-        # https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes
-        return SensorStateClass.MEASUREMENT
-
-    @property 
-    def native_value(self) -> float | None:
-        """Return the native value of the sensor."""
-        if self._attr_native_value is not None:
-            try:
-                return float(round(self._attr_native_value, 3))
-            except Exception as err:
-                _LOGGER.error(f"Error {err} convert state value: {self.hyper.name} => {self._attr_native_value}")
-        return None
+            _LOGGER.error(f"Error {err} setting state: {self._attr_name} => {value}")

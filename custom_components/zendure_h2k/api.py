@@ -1,12 +1,12 @@
-from enum import StrEnum
-import os
-import sys
 import logging
 import json
+from enum import StrEnum
 from flask import session
-import requests
+from paho.mqtt import client as mqtt_client
+from base64 import b64decode
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .hyper2000 import Hyper2000
 
@@ -24,6 +24,10 @@ class API:
         self.username = username
         self.password = password
         self.session = None
+        self.token: str = None
+        self.mqttUrl: str = None
+        self.hypers: dict[str, Hyper2000] = {}
+        self.clients: dict[str, mqtt_client] = {}
 
     async def connect(self) -> bool:
         _LOGGER.info("Connecting to Zendure")
@@ -52,12 +56,15 @@ class API:
             response = await self.session.post(url=url, json=authBody, headers=self.headers)
             if response.ok:
                 respJson = await response.json()
-                token = respJson["data"]["accessToken"]
-                self.headers["Blade-Auth"] = f'bearer {token}'
+                json = respJson["data"]
+                self.token = json["accessToken"]
+                self.mqttUrl = json["iotUrl"]
+                self.headers["Blade-Auth"] = f'bearer {self.token}'
             else:
                 _LOGGER.error("Authentication failed!")
                 _LOGGER.error(response.text)
                 return False
+            
         except Exception as e:
             _LOGGER.exception(e)
             _LOGGER.info("Unable to connected to Zendure!")
@@ -70,14 +77,17 @@ class API:
         self.session.close()
         self.session = None
 
-    async def getHypers(self, hass: HomeAssistant) -> dict[str, Hyper2000]:
+    async def getHypers(self, hass: HomeAssistant):
         SF_DEVICELIST_PATH = "/productModule/device/queryDeviceListByConsumerId"
         SF_DEVICEDETAILS_PATH = "/device/solarFlow/detail"
-        SF_DEVICEDSECRET = "/developer/api/apply"
-        hypers : dict[str, Hyper2000] = {}
+        self.hypers : dict[str, Hyper2000] = {}
         try:
             if self.session is None:
                 await self.connect()
+
+            cloud = self.mqtt(self.token, 'zenApp', b64decode('SDZzJGo5Q3ROYTBO'.encode()).decode("latin-1"))
+            self.clients['cloud'] = cloud
+
             url = f'{self.zen_api}{SF_DEVICELIST_PATH}'
             _LOGGER.info("Getting device list ...")
 
@@ -89,7 +99,7 @@ class API:
                     _LOGGER.debug(f'prodname: {dev["productName"]}')
                     if dev["productName"] == 'Hyper 2000':
                         try:
-                            h : hyper2000 = None
+                            h : Hyper2000 = None
                             payload = {"deviceId": dev["id"]}
                             url = f'{self.zen_api}{SF_DEVICEDETAILS_PATH}'
                             _LOGGER.info(f'Getting device details for [{dev["id"]}] ...')
@@ -99,21 +109,13 @@ class API:
                                 data = respJson["data"]
                                 h = Hyper2000(hass, data["deviceKey"], data["productKey"], data["deviceName"], data)
                                 if h.hid:
-                                    _LOGGER.info(f'Hyper: [{h.hid}] ')
-                                    hypers[data["deviceKey"]] = h
+                                    _LOGGER.info(f'Hyper: [{h.hid}]')
+                                    self.hypers[data["deviceKey"]] = h
+                                    _LOGGER.info(f'Data: {data}')
+                                    cloud.subscribe(f'/{h.prodkey}/{h.hid}/#')
+                                    cloud.subscribe(f'iot/{h.prodkey}/{h.hid}/#')
                                 else:
-                                    _LOGGER.info(f'Hyper: [??] ')
-
-                                # Get the appsecret 
-                                payload = {"account": self.username,"snNumber": data["snNumber"]}
-                                url = f'{self.zen_api}{SF_DEVICEDSECRET}'
-                                response = await self.session.post(url=url, json=payload, headers=self.headers)
-                                if response.ok:
-                                    respJson = await response.json()
-                                    data = respJson["data"]
-                                    h.mqttUrl = data["mqttUrl"]
-                                    h.appKey = data["appKey"]
-                                    h.secret = data["secret"]
+                                    _LOGGER.info(f'Hyper: [??]')
                             else:
                                 _LOGGER.error("Fetching device details failed!")
                                 _LOGGER.error(response.text)
@@ -125,17 +127,80 @@ class API:
         except Exception as e:
             _LOGGER.exception(e)
 
-        return hypers
+    def initialize(self):
+        _LOGGER.info('init hypers')
+        try:
+            for k, h in self.hypers.items():
+                h.create_sensors()
+ 
+        except Exception as err:
+            _LOGGER.error(err)
+            
+    def refresh(self):
+        _LOGGER.info('refresh hypers')
+        try:
+            cloud = self.clients['cloud']
+            for k, h in self.hypers.items():
+                cloud.publish(h._topic_read,'{"properties": ["getAll"]}')
+        except Exception as err:
+            _LOGGER.error(err)
 
     @property
     def controller_name(self) -> str:
         """Return the name of the controller."""
         return self.zen_api.replace(".", "_")
 
+    def mqtt(self, client, username, password) -> mqtt_client:
+        _LOGGER.info(f"Create mqtt cliebt!! {client}")
+        client = mqtt_client.Client(client_id=client, clean_session=False)
+        client.username_pw_set(username=username, password=password)
+        client.on_connect = self.onConnect
+        client.on_disconnect = self.onDisconnect
+        client.on_message = self.onMessage
+        client.connect(self.mqttUrl, 1883, 120)
 
-class APIAuthError(Exception):
-    """Exception class for auth error."""
+        client.suppress_exceptions = True
+        client.loop()
+        client.loop_start()
+        return client
 
+    def onConnect(self, _client, userdata, flags, rc):
+        _LOGGER.info(f"Client has been connected")
 
-class APIConnectionError(Exception):
-    """Exception class for connection error."""
+    def onDisconnect(self, _client, userdata, rc):
+        _LOGGER.info(f"Client has been disconnected")
+
+    def onMessage(self, client, userdata, msg):
+        try:
+            payload = json.loads(msg.payload.decode())
+            parameter = msg.topic.split('/')[-1]
+            if parameter == 'report':
+                deviceid = payload["deviceId"]
+                if (properties := payload.get("properties", None)) and (hyper := self.hypers.get(deviceid, None)):
+                    try:
+                        for key, value in properties.items():
+                            if sensor := hyper.sensors.get(key, None):
+                                try:
+                                    self.hass.loop.call_soon_threadsafe(sensor.update_value, value)
+                                    # sensor.update_value(value)
+                                except Exception as err:
+                                    _LOGGER.error(f"Error value: {deviceid} {err} {key} => {value}")
+                            elif isinstance(value, (int, float)):
+                                self.hass.loop.call_soon_threadsafe(hyper.onAddSensor, key)
+                            else:
+                                _LOGGER.info(f"Found unknown state value:  {deviceid} {key} => {value}")
+
+                    except Exception as err:
+                        _LOGGER.error(f"Error update: {err} {deviceid} => {payload}")
+                else:
+                    _LOGGER.info(f"Found unknown state value: {deviceid} {msg.topic} {payload}")
+            elif parameter == 'log' and payload['logType'] == 2:
+                # battery information
+                deviceid = payload["deviceId"]
+                if hyper := self.hypers.get(deviceid, None):
+                    data = payload["log"]['params']
+                    hyper.update_battery(data)
+            else:
+                _LOGGER.info(f"Receive: {msg.topic} => {payload}")
+        except Exception as err:
+            _LOGGER.error(err)

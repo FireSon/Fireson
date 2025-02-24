@@ -16,7 +16,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_MODEL,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
@@ -24,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
-from .api import API, APIAuthError, APIConnectionError
+from .api import API
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL, CONF_CONSUMED, CONF_PRODUCED
 
 
@@ -47,11 +46,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         _LOGGER.debug('Check API connection')
         api = API(hass, data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
-        await api.connect()
-        # If you cannot connect, raise CannotConnect
-        # If the authentication is wrong, raise InvalidAuth
-    except APIAuthError as err:
-        raise InvalidAuth from err
+        if not await api.connect():
+            raise InvalidAuth from err
     except APIConnectionError as err:
         raise CannotConnect from err
     return {"title": f"Zendure Integration - {data[CONF_HOST]}"}
