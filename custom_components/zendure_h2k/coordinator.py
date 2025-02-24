@@ -68,15 +68,14 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
         # Set variables from values entered in config flow setup
         self.consumed: str = config_entry.data[CONF_CONSUMED]
         self.produced: str = config_entry.data[CONF_PRODUCED]
-        self.counter: int = 0
         _LOGGER.debug(f"Energy sensors: {self.consumed} - {self.produced}")
-
-        async_track_state_change_event(
-            self._hass,
-            ["sensor.google_photos_foto_s_jan_filename"],
-            self._async_update_energy
-        )
-        _LOGGER.debug(f"Energy initalized: {self.consumed} - {self.produced}")
+        if self.consumed and self.produced:
+            async_track_state_change_event(
+                self._hass,
+                [self.consumed, self.produced],
+                self._async_update_energy
+            )
+            _LOGGER.debug(f"Energy initalized: {self.consumed} - {self.produced}")
 
         # Initialise your api here
         self.api = API(self._hass, self.host, self.user, self.pwd)
@@ -93,13 +92,10 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
             _LOGGER.error(err)
         return True
 
-    async def async_update_data(self) -> int:
+    async def async_update_data(self):
         _LOGGER.debug('async_update_data')
         self.api.refresh()
-        self.counter += 1
-        _LOGGER.debug('async_update_data ready')
         self._schedule_refresh()
-        return self.counter
 
     @callback
     def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:

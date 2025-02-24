@@ -1,4 +1,4 @@
-"""Interfaces with the Zendure Integration binairy sensors."""
+"""Interfaces with the Zendure Integration api sensors."""
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -9,4 +9,4 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    Hyper2000.addBinarySensors = async_add_entities
+    Hyper2000.addSelects = async_add_entities

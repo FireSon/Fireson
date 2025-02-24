@@ -1,7 +1,5 @@
 """The Zendure Integration integration."""
-
 from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -17,8 +15,7 @@ from .coordinator import ZendureCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
-# PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SENSOR]
 
 type MyConfigEntry = ConfigEntry[RuntimeData]
 

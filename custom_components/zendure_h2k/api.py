@@ -142,6 +142,9 @@ class API:
             cloud = self.clients['cloud']
             for k, h in self.hypers.items():
                 cloud.publish(h._topic_read,'{"properties": ["getAll"]}')
+
+            # if (h := self.hypers.get('ajNtx5P6', None)):
+            #     cloud.publish(h._topic_function,'{"deviceKey": "ajNtx5P6", "function": "deviceAutomation", "arguments": [{"autoModelProgram": 1, "autoModelValue": { "outPower": 123} , "msgType": 1, "autoModel": 8}]}')
         except Exception as err:
             _LOGGER.error(err)
 
@@ -181,6 +184,7 @@ class API:
                         for key, value in properties.items():
                             if sensor := hyper.sensors.get(key, None):
                                 try:
+                                    _LOGGER.info(f"Update sensor:  {key} => {value}")
                                     self.hass.loop.call_soon_threadsafe(sensor.update_value, value)
                                     # sensor.update_value(value)
                                 except Exception as err:
