@@ -1,5 +1,5 @@
 {
-    "name": "ludeeus/integration_blueprint",
+    "name": "fireson/zendure_h2k",
     "image": "mcr.microsoft.com/devcontainers/python:3.13",
     "postCreateCommand": "scripts/setup",
     "forwardPorts": [
@@ -37,13 +37,5 @@
         }
     },
     "remoteUser": "vscode",
-    "features": {
-        "ghcr.io/devcontainers-extra/features/apt-packages:1": {
-            "packages": [
-                "ffmpeg",
-                "libturbojpeg0",
-                "libpcap-dev"
-            ]
-        }
-    }
+    "features": {}
 }

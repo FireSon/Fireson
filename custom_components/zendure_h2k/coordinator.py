@@ -51,9 +51,7 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
         self.pwd = config_entry.data[CONF_PASSWORD]
 
         # set variables from options.  You need a default here incase options have not been set
-        self.poll_interval = config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
+        self.poll_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
         # Initialise DataUpdateCoordinator
         super().__init__(
@@ -68,24 +66,27 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
         # Set variables from values entered in config flow setup
         self.consumed: str = config_entry.data[CONF_CONSUMED]
         self.produced: str = config_entry.data[CONF_PRODUCED]
-        _LOGGER.debug(f"Energy sensors: {self.consumed} - {self.produced}")
+
         if self.consumed and self.produced:
-            async_track_state_change_event(
-                self._hass, [self.consumed, self.produced], self._async_update_energy
-            )
-            _LOGGER.debug(f"Energy initalized: {self.consumed} - {self.produced}")
+            # Set variables from values entered in config flow setup
+            _LOGGER.info(f"Energy sensors: {self.consumed} - {self.produced} to _async_update_energy")
+            # async_track_state_change_event(self._hass, [self.consumed, self.produced], self._async_update_energy)
+            async_track_state_change_event(self._hass, ["input_number.powerconsumed"], self._async_update_energy)
+            async_track_state_change_event(self._hass, ["input_number.powerproduced"], self._async_update_energy)
+            _LOGGER.info("Ready init  _async_update_energy")
 
         # Initialise your api here
         self.api = API(self._hass, self.host, self.user, self.pwd)
 
     async def initialize(self) -> bool:
-        _LOGGER.debug("Start initialize")
+        _LOGGER.info("Start initialize")
         try:
             if not await self.api.connect():
                 return False
             await self.api.getHypers(self._hass)
             self.api.initialize()
-            _LOGGER.debug(f"Found: {len(self.api.hypers)} hypers")
+            _LOGGER.info(f"Found: {len(self.api.hypers)} hypers")
+
         except Exception as err:
             _LOGGER.error(err)
         return True
@@ -98,7 +99,7 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
     @callback
     def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
         """Publish state change to MQTT."""
-        _LOGGER.debug("Energy usage callback")
+        _LOGGER.info("_async_update_energy")
         if (new_state := event.data["new_state"]) is None:
             return
-        _LOGGER.debug("Energy usage state changed!")
+        _LOGGER.info(f"Energy usage state changed! {new_state}")

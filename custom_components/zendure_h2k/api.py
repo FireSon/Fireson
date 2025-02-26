@@ -53,9 +53,7 @@ class API:
 
         try:
             url = f"{self.zen_api}{SF_AUTH_PATH}"
-            response = await self.session.post(
-                url=url, json=authBody, headers=self.headers
-            )
+            response = await self.session.post(url=url, json=authBody, headers=self.headers)
             if response.ok:
                 respJson = await response.json()
                 json = respJson["data"]
@@ -108,12 +106,8 @@ class API:
                             h: Hyper2000 = None
                             payload = {"deviceId": dev["id"]}
                             url = f"{self.zen_api}{SF_DEVICEDETAILS_PATH}"
-                            _LOGGER.info(
-                                f"Getting device details for [{dev['id']}] ..."
-                            )
-                            response = await self.session.post(
-                                url=url, json=payload, headers=self.headers
-                            )
+                            _LOGGER.info(f"Getting device details for [{dev['id']}] ...")
+                            response = await self.session.post(url=url, json=payload, headers=self.headers)
                             if response.ok:
                                 respJson = await response.json()
                                 data = respJson["data"]
@@ -170,7 +164,7 @@ class API:
         return self.zen_api.replace(".", "_")
 
     def mqtt(self, client, username, password) -> mqtt_client:
-        _LOGGER.info(f"Create mqtt cliebt!! {client}")
+        _LOGGER.info(f"Create mqtt client!! {client}")
         client = mqtt_client.Client(client_id=client, clean_session=False)
         client.username_pw_set(username=username, password=password)
         client.on_connect = self.onConnect
@@ -195,37 +189,24 @@ class API:
             parameter = msg.topic.split("/")[-1]
             if parameter == "report":
                 deviceid = payload["deviceId"]
-                if (properties := payload.get("properties", None)) and (
-                    hyper := self.hypers.get(deviceid, None)
-                ):
+                if (properties := payload.get("properties", None)) and (hyper := self.hypers.get(deviceid, None)):
                     try:
                         for key, value in properties.items():
                             if sensor := hyper.sensors.get(key, None):
                                 try:
-                                    _LOGGER.info(f"Update sensor:  {key} => {value}")
-                                    self.hass.loop.call_soon_threadsafe(
-                                        sensor.update_value, value
-                                    )
-                                    # sensor.update_value(value)
+                                    self.hass.loop.call_soon_threadsafe(sensor.update_value, value)
+                                    sensor.update_value(value)
                                 except Exception as err:
-                                    _LOGGER.error(
-                                        f"Error value: {deviceid} {err} {key} => {value}"
-                                    )
+                                    _LOGGER.error(f"Error value: {deviceid} {err} {key} => {value}")
                             elif isinstance(value, (int, float)):
-                                self.hass.loop.call_soon_threadsafe(
-                                    hyper.onAddSensor, key
-                                )
+                                self.hass.loop.call_soon_threadsafe(hyper.onAddSensor, key)
                             else:
-                                _LOGGER.info(
-                                    f"Found unknown state value:  {deviceid} {key} => {value}"
-                                )
+                                _LOGGER.info(f"Found unknown state value:  {deviceid} {key} => {value}")
 
                     except Exception as err:
                         _LOGGER.error(f"Error update: {err} {deviceid} => {payload}")
                 else:
-                    _LOGGER.info(
-                        f"Found unknown state value: {deviceid} {msg.topic} {payload}"
-                    )
+                    _LOGGER.info(f"Found unknown state value: {deviceid} {msg.topic} {payload}")
             elif parameter == "log" and payload["logType"] == 2:
                 # battery information
                 deviceid = payload["deviceId"]
