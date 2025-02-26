@@ -36,7 +36,7 @@ class Hyper2000:
         #     self.properties[key] = value
         self._topic_read = f"iot/{self.prodkey}/{self.hid}/properties/read"
         self._topic_write = f"iot/{self.prodkey}/{self.hid}/properties/write"
-        self._topic_function = f"iot/{self.prodkey}/{self.hid}/function/invoke"
+        self.topic_function = f"iot/{self.prodkey}/{self.hid}/function/invoke"
         self.attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.name)},
             name=self.name,

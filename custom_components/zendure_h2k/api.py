@@ -152,9 +152,35 @@ class API:
             cloud = self.clients["cloud"]
             for k, h in self.hypers.items():
                 cloud.publish(h._topic_read, '{"properties": ["getAll"]}')
+        except Exception as err:
+            _LOGGER.error(err)
 
-            # if (h := self.hypers.get('ajNtx5P6', None)):
-            #     cloud.publish(h._topic_function,'{"deviceKey": "ajNtx5P6", "function": "deviceAutomation", "arguments": [{"autoModelProgram": 1, "autoModelValue": { "outPower": 123} , "msgType": 1, "autoModel": 8}]}')
+    def update_outpower(self, h: Hyper2000, outpower: int) -> None:
+        try:
+            _LOGGER.info("Update consumption")
+            cloud = self.clients["cloud"]
+
+            outpower -= 50
+            outpower = max(outpower, 0)
+
+            power = json.dumps(
+                {
+                    "deviceKey": h.hid,
+                    "function": "deviceAutomation",
+                    "arguments": [
+                        {
+                            "autoModelProgram": 1,
+                            "autoModelValue": {"outPower": outpower},
+                            "msgType": 1,
+                            "autoModel": 8,
+                        }
+                    ],
+                },
+                default=lambda o: o.__dict__,
+            )
+            _LOGGER.info(f"Update power: {power}")
+
+            cloud.publish(h.topic_function, power)
         except Exception as err:
             _LOGGER.error(err)
 

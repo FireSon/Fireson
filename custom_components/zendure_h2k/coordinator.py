@@ -70,10 +70,7 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
         if self.consumed and self.produced:
             # Set variables from values entered in config flow setup
             _LOGGER.info(f"Energy sensors: {self.consumed} - {self.produced} to _async_update_energy")
-            # async_track_state_change_event(self._hass, [self.consumed, self.produced], self._async_update_energy)
-            async_track_state_change_event(self._hass, ["input_number.powerconsumed"], self._async_update_energy)
-            async_track_state_change_event(self._hass, ["input_number.powerproduced"], self._async_update_energy)
-            _LOGGER.info("Ready init  _async_update_energy")
+            async_track_state_change_event(self._hass, [self.consumed, self.produced], self._async_update_energy)
 
         # Initialise your api here
         self.api = API(self._hass, self.host, self.user, self.pwd)
@@ -99,7 +96,13 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
     @callback
     def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
         """Publish state change to MQTT."""
-        _LOGGER.info("_async_update_energy")
-        if (new_state := event.data["new_state"]) is None:
-            return
-        _LOGGER.info(f"Energy usage state changed! {new_state}")
+        try:
+            _LOGGER.info("_async_update_energy")
+            if (new_state := event.data["new_state"]) is None:
+                return
+
+            if event.data["entity_id"] == "input_number.powerconsumed":
+                self.api.update_outpower(list(self.api.hypers.values())[0], int(float(new_state.state)))
+
+        except Exception as err:
+            _LOGGER.error(err)
