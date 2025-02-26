@@ -37,6 +37,12 @@ class Hyper2000:
         self._topic_read = f"iot/{self.prodkey}/{self.hid}/properties/read"
         self._topic_write = f"iot/{self.prodkey}/{self.hid}/properties/write"
         self._topic_function = f"iot/{self.prodkey}/{self.hid}/function/invoke"
+        self.attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.name)},
+            name=self.name,
+            manufacturer="Zendure",
+            model="Hyper2000",
+        )
 
     def create_sensors(self):
         def binary(
@@ -47,14 +53,7 @@ class Hyper2000:
             deviceclass: str = None,
         ) -> Hyper2000BinarySensor:
             if template:
-                s = Hyper2000BinarySensor(
-                    self,
-                    uniqueid,
-                    name,
-                    Template(template, self._hass),
-                    uom,
-                    deviceclass,
-                )
+                s = Hyper2000BinarySensor(self, uniqueid, name, Template(template, self._hass), uom, deviceclass)
             else:
                 s = Hyper2000BinarySensor(self, uniqueid, name, None, uom, deviceclass)
             self.sensors[uniqueid] = s
@@ -98,20 +97,8 @@ class Hyper2000:
         Hyper2000.addSelects(selects)
 
         binairies = [
-            binary(
-                "masterSwitch",
-                "Master Switch",
-                "{{ value | default() }}",
-                None,
-                "switch",
-            ),
-            binary(
-                "buzzerSwitch",
-                "Buzzer Switch",
-                "{{ value | default() }}",
-                None,
-                "switch",
-            ),
+            binary("masterSwitch", "Master Switch", "{{ value | default() }}", None, "switch"),
+            binary("buzzerSwitch", "Buzzer Switch", "{{ value | default() }}", None, "switch"),
             binary("wifiState", "WiFi State", "{{ value | bool() }}", None, "switch"),
             binary("heatState", "Heat State", "{{ value | bool() }}", None, "switch"),
         ]
@@ -156,14 +143,8 @@ class Hyper2000:
             sensor("solarPower1", "Solar Power 1", None, "W", "power"),
             sensor("solarPower2", "Solar Power 2", None, "W", "power"),
             sensor("pass", "Pass Mode", None),
-            sensor("strength", "Wifi strength", None),
-            sensor(
-                "hyperTmp",
-                "Hyper Temperature",
-                "{{ (value | float/10 - 273.15) | round(2) }}",
-                "°C",
-                "temperature",
-            ),
+            sensor("strength", "WiFi strength", None),
+            sensor("hyperTmp", "Hyper Temperature", "{{ (value | float/10 - 273.15) | round(2) }}", "°C", "temperature"),
         ]
         Hyper2000.addSensors(sensors)
 
@@ -197,12 +178,7 @@ class Hyper2000Sensor(SensorEntity):
     ) -> None:
         """Initialize a Hyper2000 entity."""
         self._attr_available = True
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, hyper.name)},
-            "name": hyper.name,
-            "manufacturer": "Zendure",
-            "model": hyper.prodkey,
-        }
+        self._attr_device_info = hyper.attr_device_info
         self.hyper = hyper
         self._attr_name = f"{hyper.name} {name}"
         self._attr_unique_id = f"{hyper.unique}-{uniqueid}"
@@ -214,19 +190,13 @@ class Hyper2000Sensor(SensorEntity):
     def update_value(self, value):
         try:
             if self._value_template is not None:
-                self._attr_native_value = (
-                    self._value_template.async_render_with_possible_json_value(
-                        value, None
-                    )
-                )
+                self._attr_native_value = self._value_template.async_render_with_possible_json_value(value, None)
                 self.schedule_update_ha_state()
             elif isinstance(value, (int, float)):
                 self._attr_native_value = int(value)
                 self.schedule_update_ha_state()
         except Exception as err:
-            _LOGGER.exception(
-                f"Error {err} setting state: {self._attr_unique_id} => {value}"
-            )
+            _LOGGER.exception(f"Error {err} setting state: {self._attr_unique_id} => {value}")
 
 
 class Hyper2000BinarySensor(BinarySensorEntity):
@@ -241,12 +211,7 @@ class Hyper2000BinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize a Hyper2000 entity."""
         self._attr_available = True
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, hyper.name)},
-            "name": hyper.name,
-            "manufacturer": "Zendure",
-            "model": hyper.prodkey,
-        }
+        self._attr_device_info = hyper.attr_device_info
         self.hyper = hyper
         self._attr_name = f"{hyper.name} {name}"
         self._attr_unique_id = f"{hyper.unique}-{uniqueid}"
@@ -259,11 +224,7 @@ class Hyper2000BinarySensor(BinarySensorEntity):
         try:
             _LOGGER.info(f"Update binary sensor: {self._attr_unique_id} => {value}")
             if self._value_template is not None:
-                self._attr_is_on = (
-                    self._value_template.async_render_with_possible_json_value(
-                        value, None
-                    )
-                )
+                self._attr_is_on = self._value_template.async_render_with_possible_json_value(value, None)
                 self.schedule_update_ha_state()
             elif isinstance(value, (int, float)):
                 self._attr_is_on = int(value) != 0
@@ -272,9 +233,7 @@ class Hyper2000BinarySensor(BinarySensorEntity):
                 self._attr_is_on = bool(value)
                 self.schedule_update_ha_state()
         except Exception as err:
-            _LOGGER.error(
-                f"Error {err} setting state: {self._attr_unique_id} => {value}"
-            )
+            _LOGGER.error(f"Error {err} setting state: {self._attr_unique_id} => {value}")
 
 
 class Hyper2000Select(SelectEntity):
@@ -288,12 +247,7 @@ class Hyper2000Select(SelectEntity):
         options: list[str],
     ) -> None:
         """Initialize a Hyper2000 entity."""
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, hyper.name)},
-            "name": hyper.name,
-            "manufacturer": "Zendure",
-            "model": hyper.prodkey,
-        }
+        self._attr_device_info = hyper.attr_device_info
         self.hyper = hyper
         self._attr_unique_id = f"{hyper.unique}-{uniqueid}"
         self._attr_name = f"{hyper.name} {name}"

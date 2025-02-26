@@ -49,7 +49,7 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
         self.host = config_entry.data[CONF_HOST]
         self.user = config_entry.data[CONF_USERNAME]
         self.pwd = config_entry.data[CONF_PASSWORD]
-  
+
         # set variables from options.  You need a default here incase options have not been set
         self.poll_interval = config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
@@ -62,7 +62,7 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
             name=f"{DOMAIN} ({config_entry.unique_id})",
             update_method=self.async_update_data,
             update_interval=timedelta(seconds=self.poll_interval),
-            always_update=True
+            always_update=True,
         )
 
         # Set variables from values entered in config flow setup
@@ -71,9 +71,7 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
         _LOGGER.debug(f"Energy sensors: {self.consumed} - {self.produced}")
         if self.consumed and self.produced:
             async_track_state_change_event(
-                self._hass,
-                [self.consumed, self.produced],
-                self._async_update_energy
+                self._hass, [self.consumed, self.produced], self._async_update_energy
             )
             _LOGGER.debug(f"Energy initalized: {self.consumed} - {self.produced}")
 
@@ -81,26 +79,26 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
         self.api = API(self._hass, self.host, self.user, self.pwd)
 
     async def initialize(self) -> bool:
-        _LOGGER.debug('Start initialize')
+        _LOGGER.debug("Start initialize")
         try:
             if not await self.api.connect():
                 return False
             await self.api.getHypers(self._hass)
             self.api.initialize()
-            _LOGGER.debug(f'Found: {len(self.api.hypers)} hypers')
+            _LOGGER.debug(f"Found: {len(self.api.hypers)} hypers")
         except Exception as err:
             _LOGGER.error(err)
         return True
 
     async def async_update_data(self):
-        _LOGGER.debug('async_update_data')
+        _LOGGER.debug("async_update_data")
         self.api.refresh()
         self._schedule_refresh()
 
     @callback
     def _async_update_energy(self, event: Event[EventStateChangedData]) -> None:
         """Publish state change to MQTT."""
-        _LOGGER.debug('Energy usage callback')
+        _LOGGER.debug("Energy usage callback")
         if (new_state := event.data["new_state"]) is None:
             return
-        _LOGGER.debug('Energy usage state changed!')
+        _LOGGER.debug("Energy usage state changed!")
