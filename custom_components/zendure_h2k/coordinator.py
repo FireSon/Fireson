@@ -105,10 +105,12 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
             h: Hyper2000 = list(self.api.hypers.values())[0]
             currpower = int(h.sensors["outputHomePower"].state)
             power = int(float(new_state.state))
+            power = int(float(new_state.state))
+            _LOGGER.info(f"_async_update_energy: {power} - {currpower}")
 
             if event.data["entity_id"] == self.consumed:
                 currpower += power
-            elif event.data["entity_id"] == self.consumed:
+            elif event.data["entity_id"] == self.produced:
                 currpower -= power
 
             # Update the power
