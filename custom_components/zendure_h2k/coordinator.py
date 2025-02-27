@@ -49,6 +49,7 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
         self.host = config_entry.data[CONF_HOST]
         self.user = config_entry.data[CONF_USERNAME]
         self.pwd = config_entry.data[CONF_PASSWORD]
+        self._outpower = 0
 
         # set variables from options.  You need a default here incase options have not been set
         self.poll_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -101,8 +102,17 @@ class ZendureCoordinator(DataUpdateCoordinator[int]):
             if (new_state := event.data["new_state"]) is None:
                 return
 
-            if event.data["entity_id"] == "input_number.powerconsumed":
-                self.api.update_outpower(list(self.api.hypers.values())[0], int(float(new_state.state)))
+            h: Hyper2000 = list(self.api.hypers.values())[0]
+            currpower = int(h.sensors["outputHomePower"].state)
+            power = int(float(new_state.state))
+
+            if event.data["entity_id"] == self.consumed:
+                currpower += power
+            elif event.data["entity_id"] == self.consumed:
+                currpower -= power
+
+            # Update the power
+            self.api.update_outpower(h, currpower)
 
         except Exception as err:
             _LOGGER.error(err)

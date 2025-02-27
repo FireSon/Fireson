@@ -160,9 +160,6 @@ class API:
             _LOGGER.info("Update consumption")
             cloud = self.clients["cloud"]
 
-            outpower -= 50
-            outpower = max(outpower, 0)
-
             power = json.dumps(
                 {
                     "deviceKey": h.hid,
@@ -170,7 +167,7 @@ class API:
                     "arguments": [
                         {
                             "autoModelProgram": 1,
-                            "autoModelValue": {"outPower": outpower},
+                            "autoModelValue": {"outPower": min(800, max(outpower, 0))},
                             "msgType": 1,
                             "autoModel": 8,
                         }
@@ -178,7 +175,7 @@ class API:
                 },
                 default=lambda o: o.__dict__,
             )
-            _LOGGER.info(f"Update power: {power}")
+            _LOGGER.info(f"Update power: {min(800, max(outpower, 0))}")
 
             cloud.publish(h.topic_function, power)
         except Exception as err:
